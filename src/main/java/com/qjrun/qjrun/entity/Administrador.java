@@ -21,4 +21,6 @@ public class Administrador {
 
     private String telefone;
 
+    @Column(nullable = false)
+    private boolean ativo = true;
 }
