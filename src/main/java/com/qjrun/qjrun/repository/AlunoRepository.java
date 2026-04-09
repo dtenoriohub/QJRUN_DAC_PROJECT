@@ -2,8 +2,12 @@ package com.qjrun.qjrun.repository;
 
 import com.qjrun.qjrun.entity.Aluno;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface AlunoRepository extends JpaRepository<Aluno, Long> {}
+@Repository
+public interface AlunoRepository extends JpaRepository<Aluno, Long> {
+
+}
 
 
 
