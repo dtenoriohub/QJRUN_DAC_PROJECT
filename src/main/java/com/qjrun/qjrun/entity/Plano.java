@@ -1,12 +1,19 @@
 package com.qjrun.qjrun.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "Planos")
 public class Plano {
     @Id
@@ -24,5 +31,12 @@ public class Plano {
     @Column(nullable = false)
     private Integer duracaoMeses;
 
+    @Builder.Default
+    @Column(nullable = false)
     private boolean ativo = true;
+
+    // CARDINALIDADE
+    @OneToMany(mappedBy = "plano")
+    @JsonIgnore
+    private List<Aluno> alunos = new ArrayList<>();
 }
