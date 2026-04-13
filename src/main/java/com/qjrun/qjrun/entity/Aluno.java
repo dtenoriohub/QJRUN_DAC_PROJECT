@@ -1,12 +1,16 @@
 package com.qjrun.qjrun.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name="Alunos")
 public class Aluno {
     @Id
@@ -26,6 +30,10 @@ public class Aluno {
 
     @Column(nullable = false)
     private LocalDate dataNascimento;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean ativo;
 
     // CARDINALIDADE
     @ManyToOne
