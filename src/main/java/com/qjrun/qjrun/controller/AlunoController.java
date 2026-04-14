@@ -34,4 +34,9 @@ public class AlunoController {
         alunoService.desativar(id);
     }
 
+    @PutMapping("/{id}")
+    public Aluno update(@PathVariable Long id, @RequestBody Aluno aluno) {
+        return alunoService.update(id, aluno);
+    }
+
 }
