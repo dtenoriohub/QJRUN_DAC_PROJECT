@@ -33,7 +33,7 @@ public class Plano {
 
     @Builder.Default
     @Column(nullable = false)
-    private boolean ativo = true;
+    private Boolean ativo = true;
 
     // CARDINALIDADE
     @OneToMany(mappedBy = "plano")

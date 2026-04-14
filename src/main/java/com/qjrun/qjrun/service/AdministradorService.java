@@ -36,9 +36,9 @@ public class AdministradorService {
         String emailAtual =  administrador.getEmail();
 
         if (novoEmail != null && !novoEmail.equals(emailAtual)) {
-            Optional<Administrador> emailEmUso = administradorRepository.findByEmail(novoEmail);
+            Optional<Administrador> donoDoEmail = administradorRepository.findByEmail(novoEmail);
 
-            if (emailEmUso.isPresent()) {
+            if (donoDoEmail.isPresent()) {
                 throw new RuntimeException("Ops! O e-mail " + novoEmail + " já está sendo usado!");
             }
 
