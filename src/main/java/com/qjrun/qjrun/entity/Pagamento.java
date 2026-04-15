@@ -1,4 +1,5 @@
 package com.qjrun.qjrun.entity;
+
 import com.qjrun.qjrun.enums.StatusPagamento;
 
 import jakarta.persistence.*;

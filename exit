@@ -1,0 +1,34 @@
+[33ma023a1d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m HEAD@{0}: checkout: moving from main to develop
+[33m99d5d36[m[33m ([m[1;32mmain[m[33m)[m HEAD@{1}: checkout: moving from develop to main
+[33ma023a1d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m HEAD@{2}: pull: Merge made by the 'ort' strategy.
+[33md71c019[m HEAD@{3}: commit: docs: adiciona documentação do projeto em PDF
+[33m6591808[m HEAD@{4}: commit: feat: adiciona módulo de pagamento e CRUD de eventos
+[33m4302146[m HEAD@{5}: commit: criação entidade evento, cadastro das tabelas, teste dos endpoints
+[33mbbbb84d[m HEAD@{6}: pull: Merge made by the 'ort' strategy.
+[33mbad86c9[m HEAD@{7}: commit: envio diagrama de classes final
+[33m797be45[m HEAD@{8}: commit: atualização classe aluno, não finalizado
+[33mddd1951[m HEAD@{9}: pull: Fast-forward
+[33mc89373b[m HEAD@{10}: checkout: moving from main to develop
+[33m99d5d36[m[33m ([m[1;32mmain[m[33m)[m HEAD@{11}: checkout: moving from Danilo to main
+[33m3f0cbfe[m[33m ([m[1;32mDanilo[m[33m)[m HEAD@{12}: commit (merge): correcao merge e envio arquivos diagramas
+[33m8bc3cb7[m[33m ([m[1;31morigin/Danilo[m[33m)[m HEAD@{13}: checkout: moving from main to Danilo
+[33m99d5d36[m[33m ([m[1;32mmain[m[33m)[m HEAD@{14}: commit: envio diagrama com atualizações
+[33md23ef50[m HEAD@{15}: pull: Fast-forward
+[33m06ca31a[m HEAD@{16}: checkout: moving from Danilo to main
+[33m8bc3cb7[m[33m ([m[1;31morigin/Danilo[m[33m)[m HEAD@{17}: checkout: moving from Danilo to Danilo
+[33m8bc3cb7[m[33m ([m[1;31morigin/Danilo[m[33m)[m HEAD@{18}: commit: atualização diagrama de classes
+[33me88c113[m HEAD@{19}: commit: criação da entidade aluno, criacao da tabela no banco de dados, necessario finalizar implementacao controller/service
+[33m014a4a3[m HEAD@{20}: commit: alteração arquivo pom.xml e application.properties para adequação ao projeto
+[33m06ca31a[m HEAD@{21}: checkout: moving from main to Danilo
+[33m06ca31a[m HEAD@{22}: merge Danilo: Fast-forward
+[33mfd6939a[m HEAD@{23}: checkout: moving from Danilo to main
+[33m06ca31a[m HEAD@{24}: commit: criação e envio estrutura Usando Spring
+[33mfd6939a[m HEAD@{25}: checkout: moving from main to Danilo
+[33mfd6939a[m HEAD@{26}: merge Danilo: Fast-forward
+[33m3600046[m HEAD@{27}: checkout: moving from Danilo to main
+[33mfd6939a[m HEAD@{28}: commit: alteração readme
+[33m3600046[m HEAD@{29}: checkout: moving from main to Danilo
+[33m3600046[m HEAD@{30}: pull: Fast-forward
+[33m526fbee[m HEAD@{31}: pull: Fast-forward
+[33mbf0bdc3[m HEAD@{32}: commit: envio e atualização readme
+[33mb2b5d33[m HEAD@{33}: clone: from https://github.com/dtenoriohub/QJRUN_DAC_PROJECT.git

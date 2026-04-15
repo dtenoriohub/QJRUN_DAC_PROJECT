@@ -1,8 +1,8 @@
 package com.qjrun.qjrun.service;
 
 import com.qjrun.qjrun.entity.Evento;
-import com.qjrun.qjrun.repository.EventoRepository;
 import lombok.RequiredArgsConstructor;
+import com.qjrun.qjrun.repository.EventoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
