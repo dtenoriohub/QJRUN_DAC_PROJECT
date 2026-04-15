@@ -28,18 +28,16 @@ public class AlunoService {
     @Transactional
     public Aluno save(Aluno aluno) {
 
-        if (aluno.getPlano() == null || aluno.getPlano().getId() == null) {
+        //Validar se o aluno está vinculado a um plano e se o plano existe
+        if (aluno.getId() == null || aluno.getPlano().getId() == null) {
             throw new RuntimeException("O aluno deve estar vinculado a um plano.");
         }
-
-        Plano plano = planoRepository.findById(aluno.getPlano().getId())
-                .orElseThrow(() -> new RuntimeException("Plano não encontrado."));
-
+        Plano plano = planoRepository.findById(aluno.getPlano().getId()).orElseThrow(() -> new RuntimeException("Plano não encontrado."));
         aluno.setPlano(plano);
 
+        //Validar a turma
         if (aluno.getTurma() != null && aluno.getTurma().getId() != null) {
-            Turma turma = turmaRepository.findById(aluno.getTurma().getId())
-                    .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+            Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new RuntimeException("Turma não encontrada."));
             aluno.setTurma(turma);
         } else {
             aluno.setTurma(null);

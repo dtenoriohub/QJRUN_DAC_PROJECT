@@ -33,7 +33,7 @@ public class Aluno {
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean ativo=true;
+    private Boolean ativo;
 
     // CARDINALIDADE
     @ManyToOne
