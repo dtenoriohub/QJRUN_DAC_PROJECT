@@ -17,7 +17,7 @@ public class EventoService {
         return eventoRepository.findAllByAtivoTrue();
     }
 
-    public Evento criar(Evento evento) {
+    public Evento create(Evento evento) {
         return eventoRepository.save(evento);
     }
 
