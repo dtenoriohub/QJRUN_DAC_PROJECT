@@ -2,7 +2,10 @@ package com.qjrun.qjrun.controller;
 
 import com.qjrun.qjrun.entity.Evento;
 import com.qjrun.qjrun.service.EventoService;
+import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -24,9 +27,13 @@ public class EventoController {
         return eventoService.buscar(id);
     }
 
+    // ALTERADO
     @PostMapping
-    public Evento criar(@RequestBody Evento evento) {
-        return eventoService.criar(evento);
+    public ResponseEntity<Evento> create(@RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader) {
+
+        AuthUtil.exigirAdmin(perfilHeader);
+        Evento eventoSalvo = eventoService.create(evento);
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventoSalvo);
     }
 
     @PutMapping("/{id}")
