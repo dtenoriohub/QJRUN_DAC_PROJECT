@@ -14,18 +14,22 @@ public class AdministradorService {
 
     private final AdministradorRepository administradorRepository;
 
+    // CREATE
     public Administrador save(Administrador administrador) {
         return administradorRepository.save(administrador);
     }
 
+    // READ
     public List<Administrador> findAll() {
         return administradorRepository.findAll();
     }
 
+    // READ
     public Administrador findById(long id) {
         return administradorRepository.findById(id).orElseThrow(() -> new RuntimeException("Administrador não encontrado!"));
     }
 
+    // UPDATE
     public Administrador update(Long id, Administrador administradorAtualizado) {
         Administrador administrador =  findById(id);
 
@@ -48,6 +52,7 @@ public class AdministradorService {
         return administradorRepository.save(administrador);
     }
 
+    // DELETE
     public void inativar(Long id) {
         Administrador administrador = findById(id);
         administrador.setAtivo(false);
