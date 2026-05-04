@@ -15,18 +15,22 @@ public class TurmaService {
 
     private final TurmaRepository turmaRepository;
 
+    // CREATE
     public Turma save(Turma turma) {
         return turmaRepository.save(turma);
     }
 
+    // READ
     public List<Turma> findAll() {
         return turmaRepository.findAllByAtivoTrue();
     }
 
+    // READ
     public Turma findById(Long id) {
         return turmaRepository.findById(id).orElseThrow(() -> new RuntimeException("Essa turma não existe!"));
     }
 
+    // UPDATE
     public Turma update(Long id, Turma dadosAtualizados) {
         Turma turma = findById(id);
 
@@ -35,6 +39,7 @@ public class TurmaService {
         return turmaRepository.save(turma);
     }
 
+    // DELETE
     public void desativar(Long id) {
         Turma turma = findById(id);
         turma.setAtivo(false);

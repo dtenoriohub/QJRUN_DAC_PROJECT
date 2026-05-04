@@ -13,26 +13,25 @@ public class EventoService {
 
     private final EventoRepository eventoRepository;
 
-    public List<Evento> listar() {
-        return eventoRepository.findAllByAtivoTrue();
-    }
-
-    public Evento create(Evento evento) {
+    // CREATE
+    public Evento save(Evento evento) {
         return eventoRepository.save(evento);
     }
 
-    public Evento buscar(Long id) {
+    // READ
+    public List<Evento> findAll() {
+        return eventoRepository.findAllByAtivoTrue();
+    }
+
+    // READ
+    public Evento findById(Long id) {
         return eventoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado."));
     }
 
-    public void deletar(Long id) {
-        Evento evento = buscar(id);
-        evento.setAtivo(false);
-        eventoRepository.save(evento);
-    }
-    public Evento atualizar(Long id, Evento novoEvento) {
-        Evento evento = buscar(id);
+    // UPDATE
+    public Evento update(Long id, Evento novoEvento) {
+        Evento evento = findById(id);
 
         evento.setNome(novoEvento.getNome());
         evento.setDescricao(novoEvento.getDescricao());
@@ -42,5 +41,12 @@ public class EventoService {
         evento.setVagas(novoEvento.getVagas());
 
         return eventoRepository.save(evento);
+    }
+
+    // DELETE
+    public void desativar(Long id) {
+        Evento evento = findById(id);
+        evento.setAtivo(false);
+        eventoRepository.save(evento);
     }
 }

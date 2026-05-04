@@ -21,10 +21,7 @@ public class AlunoService {
     private final PlanoRepository planoRepository;
     private final TurmaRepository turmaRepository;
 
-    public List<Aluno> findAll() {
-        return alunoRepository.findAllByAtivoTrue();
-    }
-
+    // CREATE
     @Transactional
     public Aluno save(Aluno aluno) {
 
@@ -50,16 +47,17 @@ public class AlunoService {
         return alunoRepository.save(aluno);
     }
 
+    // READ
+    public List<Aluno> findAll() {
+        return alunoRepository.findAllByAtivoTrue();
+    }
+
+    // READ
     public Aluno findById(Long id) {
         return alunoRepository.findById(id).orElseThrow(()-> new RuntimeException("Aluno não encontrado!"));
     }
 
-    public void desativar(Long id) {
-        Aluno aluno = findById(id);
-        aluno.setAtivo(false);
-        alunoRepository.save(aluno);
-    }
-
+    // UPDATE
     @Transactional
     public Aluno update(Long id, Aluno alunoAtualizado) {
         Aluno alunoExistente = findById(id);
@@ -71,6 +69,13 @@ public class AlunoService {
         atualizarPlano(alunoAtualizado, alunoExistente);
 
         return alunoRepository.save(alunoExistente);
+    }
+
+    // DELETE
+    public void desativar(Long id) {
+        Aluno aluno = findById(id);
+        aluno.setAtivo(false);
+        alunoRepository.save(aluno);
     }
 
     private void validarEAtualizarEmail(Aluno alunoAtualizado, Aluno alunoExistente) {
