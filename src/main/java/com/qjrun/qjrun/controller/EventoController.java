@@ -11,7 +11,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/evento")
+@RequestMapping("/eventos")
 @RequiredArgsConstructor
 public class EventoController {
 
@@ -19,12 +19,12 @@ public class EventoController {
 
     @GetMapping
     public List<Evento> listar() {
-        return eventoService.listar();
+        return eventoService.findAll();
     }
 
     @GetMapping("/{id}")
     public Evento buscar(@PathVariable Long id) {
-        return eventoService.buscar(id);
+        return eventoService.findById(id);
     }
 
     // ALTERADO
@@ -32,17 +32,17 @@ public class EventoController {
     public ResponseEntity<Evento> create(@RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader) {
 
         AuthUtil.exigirAdmin(perfilHeader);
-        Evento eventoSalvo = eventoService.create(evento);
+        Evento eventoSalvo = eventoService.save(evento);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoSalvo);
     }
 
     @PutMapping("/{id}")
     public Evento atualizar(@PathVariable Long id, @RequestBody Evento evento) {
-        return eventoService.atualizar(id, evento);
+        return eventoService.update(id, evento);
     }
 
     @DeleteMapping("/{id}")
     public void deletar(@PathVariable Long id) {
-        eventoService.deletar(id);
+        eventoService.desativar(id);
     }
 }
