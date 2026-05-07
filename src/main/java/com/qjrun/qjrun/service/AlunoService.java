@@ -24,25 +24,11 @@ public class AlunoService {
     // CREATE
     @Transactional
     public Aluno save(Aluno aluno) {
-
-        if (aluno.getPlano() == null || aluno.getPlano().getId() == null) {
-            throw new RuntimeException("O aluno deve estar vinculado a um plano.");
-        }
-
-        Plano plano = planoRepository.findById(aluno.getPlano().getId())
-                .orElseThrow(() -> new RuntimeException("Plano não encontrado."));
-
-        aluno.setPlano(plano);
-
-        if (aluno.getTurma() != null && aluno.getTurma().getId() != null) {
-            Turma turma = turmaRepository.findById(aluno.getTurma().getId())
-                    .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
-            aluno.setTurma(turma);
-        } else {
-            aluno.setTurma(null);
-        }
-
+        aluno.setId(null);
         aluno.setAtivo(true);
+
+        vincularPlanoNaCriacao(aluno);
+        vincularTurmaNaCriacao(aluno);
 
         return alunoRepository.save(aluno);
     }
@@ -72,27 +58,29 @@ public class AlunoService {
     }
 
     // DELETE
+    @Transactional
     public void desativar(Long id) {
         Aluno aluno = findById(id);
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
     }
 
+    // REGRAS DE ATUALIZAÇÃO
     private void validarEAtualizarEmail(Aluno alunoAtualizado, Aluno alunoExistente) {
 
         String novoEmail = alunoAtualizado.getEmail();
 
-        if (novoEmail != null && !novoEmail.equals(alunoExistente.getEmail())) {
-
-            if (alunoRepository.findByEmail(novoEmail).isPresent()) {
-                throw new RuntimeException("Ops! O e-mail " + novoEmail + " já está sendo usado!");
-            }
-
-            alunoExistente.setEmail(novoEmail);
+        if (novoEmail == null || novoEmail.isBlank() || novoEmail.equals(alunoExistente.getEmail())) {
+            return;
         }
+
+        if (alunoRepository.findByEmail(novoEmail).isPresent()) {
+            throw new RuntimeException("Ops! O e-mail " + novoEmail + " já está sendo usado!");
+        }
+
+        alunoExistente.setEmail(novoEmail);
     }
 
-    //MÉTODOS DE ATUALIZAÇÃO
     private void atualizarDadosBase(Aluno alunoAtualizado, Aluno alunoExistente) {
 
         alunoExistente.setNome(alunoAtualizado.getNome());
@@ -114,6 +102,32 @@ public class AlunoService {
             Plano novoPlano = planoRepository.findById(alunoAtualizado.getPlano().getId()).orElseThrow(() -> new RuntimeException("Novo plano não encontrado."));
 
             alunoExistente.setPlano(novoPlano);
+        }
+    }
+
+    // REGRAS DE CRIAÇÃO
+    private void vincularPlanoNaCriacao(Aluno aluno) {
+
+        if (aluno.getPlano() == null || aluno.getPlano().getId() == null) {
+            throw new RuntimeException("O aluno deve estar vinculado a um plano.");
+        }
+
+        Plano plano = planoRepository.findById(aluno.getPlano().getId())
+                .orElseThrow(() -> new RuntimeException("Plano não encontrado."));
+
+        aluno.setPlano(plano);
+    }
+
+    private void vincularTurmaNaCriacao(Aluno aluno) {
+
+        if (aluno.getTurma() != null && aluno.getTurma().getId() != null) {
+            Turma turma = turmaRepository.findById(aluno.getTurma().getId())
+                    .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+
+            aluno.setTurma(turma);
+
+        } else {
+            aluno.setTurma(null);
         }
     }
 }
