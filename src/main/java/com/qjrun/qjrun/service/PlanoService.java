@@ -16,6 +16,7 @@ public class PlanoService {
     private final PlanoRepository planoRepository;
 
     // CREATE
+    @Transactional
     public Plano save(Plano plano) {
         return planoRepository.save(plano);
     }
@@ -47,6 +48,7 @@ public class PlanoService {
     }
 
     // DELETE
+    @Transactional
     public void desativar(Long id) {
         Plano plano = findById(id);
         plano.setAtivo(false);

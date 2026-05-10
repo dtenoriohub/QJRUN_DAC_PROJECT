@@ -23,12 +23,12 @@ public class AlunoService {
 
     // CREATE
     @Transactional
-    public Aluno save(Aluno aluno) {
+    public Aluno save(Aluno aluno, String perfilUsuario) {
         aluno.setId(null);
         aluno.setAtivo(true);
 
         vincularPlanoNaCriacao(aluno);
-        vincularTurmaNaCriacao(aluno);
+        vincularTurmaNaCriacao(aluno, perfilUsuario);
 
         return alunoRepository.save(aluno);
     }
@@ -118,16 +118,22 @@ public class AlunoService {
         aluno.setPlano(plano);
     }
 
-    private void vincularTurmaNaCriacao(Aluno aluno) {
+    private void vincularTurmaNaCriacao(Aluno aluno, String perfilUsuario) {
 
-        if (aluno.getTurma() != null && aluno.getTurma().getId() != null) {
-            Turma turma = turmaRepository.findById(aluno.getTurma().getId())
-                    .orElseThrow(() -> new RuntimeException("Turma não encontrada."));
-
-            aluno.setTurma(turma);
-
-        } else {
+        // Regra de negócio: se for o próprio aluno se cadastrando, a atribuição a uma turma é bloqueada (só o admin pode atribuir um aluno a uma turma)
+        if ("ROLE_ALUNO".equals(perfilUsuario)) {
             aluno.setTurma(null);
+            return;
         }
+
+        // Cláusula de Guarda do Admin: Se não mandou turma (ou mandou sem ID), zera e sai
+        if (aluno.getTurma() == null || aluno.getTurma().getId() == null) {
+            aluno.setTurma(null);
+            return;
+        }
+
+        Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+
+        aluno.setTurma(turma);
     }
 }
