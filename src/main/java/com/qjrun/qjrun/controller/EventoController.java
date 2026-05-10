@@ -17,32 +17,47 @@ public class EventoController {
 
     private final EventoService eventoService;
 
+    // READ (Aberto: Alunos e Admins precisam ver os eventos)
     @GetMapping
-    public List<Evento> listar() {
-        return eventoService.findAll();
+    public ResponseEntity<List<Evento>> findAll() {
+        List<Evento> eventos = eventoService.findAll();
+        return ResponseEntity.ok(eventos);
     }
 
+    // READ BY ID (Aberto: Alunos e Admins precisam ver os detalhes dos eventos)
     @GetMapping("/{id}")
-    public Evento buscar(@PathVariable Long id) {
-        return eventoService.findById(id);
+    public ResponseEntity<Evento> findById(@PathVariable Long id) {
+        Evento evento = eventoService.findById(id);
+        return ResponseEntity.ok(evento);
     }
 
-    // ALTERADO
+    // CREATE (Somente Administrador pode criar novas provas)
     @PostMapping
     public ResponseEntity<Evento> create(@RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader) {
 
         AuthUtil.exigirAdmin(perfilHeader);
+
         Evento eventoSalvo = eventoService.save(evento);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoSalvo);
     }
 
+    // UPDATE (Somente Administrador pode fazer atualizações de eventos)
     @PutMapping("/{id}")
-    public Evento atualizar(@PathVariable Long id, @RequestBody Evento evento) {
-        return eventoService.update(id, evento);
+    public ResponseEntity<Evento> update(@PathVariable Long id, @RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")   String perfilHeader) {
+
+        AuthUtil.exigirAdmin(perfilHeader);
+
+        Evento eventoSalvo = eventoService.update(id, evento);
+        return ResponseEntity.ok(eventoSalvo);
     }
 
+    // DELETE (Somente Administrador pode "deletar" um evento)
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO") String perfilHeader) {
+
+        AuthUtil.exigirAdmin(perfilHeader);
+
         eventoService.desativar(id);
+        return ResponseEntity.noContent().build();
     }
 }
