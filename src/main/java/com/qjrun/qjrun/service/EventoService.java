@@ -3,7 +3,9 @@ package com.qjrun.qjrun.service;
 import com.qjrun.qjrun.entity.Evento;
 import lombok.RequiredArgsConstructor;
 import com.qjrun.qjrun.repository.EventoRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,7 +16,10 @@ public class EventoService {
     private final EventoRepository eventoRepository;
 
     // CREATE
+    @Transactional
     public Evento save(Evento evento) {
+        evento.setId(null); // impede atualização acidental de um evento que já existe
+        evento.setAtivo(true); // garante que novos eventos "nasçam" ativos
         return eventoRepository.save(evento);
     }
 
@@ -30,23 +35,27 @@ public class EventoService {
     }
 
     // UPDATE
-    public Evento update(Long id, Evento novoEvento) {
-        Evento evento = findById(id);
+    @Transactional
+    public Evento update(Long id, Evento eventoAtualizado) {
+        Evento eventoExistente = findById(id);
 
-        evento.setNome(novoEvento.getNome());
-        evento.setDescricao(novoEvento.getDescricao());
-        evento.setLocal(novoEvento.getLocal());
-        evento.setData(novoEvento.getData());
-        evento.setHorario(novoEvento.getHorario());
-        evento.setVagas(novoEvento.getVagas());
+        atualizarDadosBase(eventoAtualizado, eventoExistente);
 
-        return eventoRepository.save(evento);
+        return eventoRepository.save(eventoExistente);
     }
 
     // DELETE
+    @Transactional
     public void desativar(Long id) {
         Evento evento = findById(id);
         evento.setAtivo(false);
         eventoRepository.save(evento);
+    }
+
+    // MÉTODOS AUXILIARES
+    private void atualizarDadosBase(Evento eventoAtualizado, Evento eventoExistente) {
+
+        // Copia tudo do JSON para o banco, menos o ID e o status
+        BeanUtils.copyProperties(eventoAtualizado, eventoExistente, "id", "ativo");
     }
 }
