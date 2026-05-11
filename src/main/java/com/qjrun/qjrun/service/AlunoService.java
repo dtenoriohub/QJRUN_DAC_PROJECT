@@ -66,6 +66,7 @@ public class AlunoService {
     }
 
     // REGRAS DE ATUALIZAÇÃO
+
     private void validarEAtualizarEmail(Aluno alunoAtualizado, Aluno alunoExistente) {
 
         String novoEmail = alunoAtualizado.getEmail();
