@@ -37,15 +37,18 @@ public class AlunoController {
 
     // CREATE (o aluno pode se matricular)
     @PostMapping
-    public ResponseEntity<Aluno> save(@RequestBody Aluno aluno, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE-aluno") String perfilHeader) {
+    public ResponseEntity<Aluno> save(@RequestBody Aluno aluno, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE-ALUNO") String perfilHeader) {
 
         Aluno alunoSalvo = alunoService.save(aluno, perfilHeader);
         return ResponseEntity.status(HttpStatus.CREATED).body(alunoSalvo);
     }
 
+    // DELETE
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable long id) {
-        alunoService.desativar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader) {
+
+        alunoService.desativar(id, perfilHeader);
+        return ResponseEntity.noContent().build();
     }
 
     //UPDATE (o aluno pode atualizar alguns dos próprios dados)

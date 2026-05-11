@@ -28,11 +28,12 @@ public class AdministradorService {
     }
 
     // READ
-    public Administrador findById(long id) {
+    public Administrador findById(Long id) {
         return administradorRepository.findById(id).orElseThrow(() -> new RuntimeException("Administrador não encontrado!"));
     }
 
     // UPDATE
+    @Transactional
     public Administrador update(Long id, Administrador administradorAtualizado) {
         Administrador administradorExistente =  findById(id);
 
@@ -45,13 +46,15 @@ public class AdministradorService {
     }
 
     // DELETE
+    @Transactional
     public void inativar(Long id) {
         Administrador administrador = findById(id);
         administrador.setAtivo(false);
         administradorRepository.save(administrador);
     }
 
-    public void validarEAtualizarEmail(Administrador administradorAtualizado, Administrador administradorExistente) {
+    // METODOS AUXILIARES
+    private void validarEAtualizarEmail(Administrador administradorAtualizado, Administrador administradorExistente) {
         String novoEmail = administradorAtualizado.getEmail();
 
         // Se não tiver nenhuma alteração real sai do método
