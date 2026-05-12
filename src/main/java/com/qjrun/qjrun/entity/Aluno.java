@@ -2,7 +2,6 @@ package com.qjrun.qjrun.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 
 @Entity
