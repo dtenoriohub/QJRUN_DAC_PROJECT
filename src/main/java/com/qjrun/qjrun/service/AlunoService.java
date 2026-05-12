@@ -4,9 +4,12 @@ package com.qjrun.qjrun.service;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.entity.Turma;
+import com.qjrun.qjrun.enums.StatusPagamento;
 import com.qjrun.qjrun.repository.AlunoRepository;
+import com.qjrun.qjrun.repository.PagamentoRepository;
 import com.qjrun.qjrun.repository.PlanoRepository;
 import com.qjrun.qjrun.repository.TurmaRepository;
+import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,8 @@ public class AlunoService {
     private final AlunoRepository alunoRepository;
     private final PlanoRepository planoRepository;
     private final TurmaRepository turmaRepository;
+    private final PagamentoRepository pagamentoRepository;
+
 
     // CREATE
     @Transactional
@@ -61,11 +66,26 @@ public class AlunoService {
     @Transactional
     public void desativar(Long id, String perfilUsuario) {
 
+        AuthUtil.exigirAdmin(perfilUsuario);
+
+        Aluno aluno = findById(id);
+
         if(!"ROLE_ALUNO".equals(perfilUsuario)){
             throw new RuntimeException("aluno já desativado!");
         }
 
-        Aluno aluno = findById(id);
+        //verificacao para caso possua pendencia, não ser removido/deletado
+        boolean possuiPendencia = pagamentoRepository.findByAlunoId(id)
+                .stream()
+                .anyMatch(pagamento ->
+                        pagamento.getStatus() == StatusPagamento.PENDENTE || pagamento.getStatus() == StatusPagamento.ATRASADO
+                );
+        //excecao para ser lancado caso o aluno tenha pendencia ao ser deletado
+        if (possuiPendencia) {
+            throw new RuntimeException(
+                    "Não é possível cancelar matrícula com pagamentos pendentes ou atrasados."
+            );
+        }
 
         if (!aluno.getAtivo()) {
             throw new RuntimeException("Aluno já está desativado.");
