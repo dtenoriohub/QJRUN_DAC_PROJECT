@@ -59,8 +59,17 @@ public class AlunoService {
 
     // DELETE
     @Transactional
-    public void desativar(Long id) {
+    public void desativar(Long id, String perfilUsuario) {
+
+        if(!"ROLE_ALUNO".equals(perfilUsuario)){
+            throw new RuntimeException("aluno já desativado!");
+        }
+
         Aluno aluno = findById(id);
+
+        if (!aluno.getAtivo()) {
+            throw new RuntimeException("Aluno já está desativado.");
+        }
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
     }

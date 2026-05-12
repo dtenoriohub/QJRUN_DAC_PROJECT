@@ -37,7 +37,7 @@ public class AlunoController {
 
     // CREATE (o aluno pode se matricular)
     @PostMapping
-    public ResponseEntity<Aluno> save(@RequestBody Aluno aluno, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE-ALUNO") String perfilHeader) {
+    public ResponseEntity<Aluno> save(@RequestBody Aluno aluno, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO") String perfilHeader) {
 
         Aluno alunoSalvo = alunoService.save(aluno, perfilHeader);
         return ResponseEntity.status(HttpStatus.CREATED).body(alunoSalvo);
