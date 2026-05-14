@@ -42,5 +42,9 @@ public class Pagamento {
         @ManyToOne
         @JoinColumn(name = "aluno_id", nullable = false)
         private Aluno aluno;
+
+        @ManyToOne
+        @JoinColumn(name = "plano_id", nullable = false)
+        private Plano plano;
     }
 

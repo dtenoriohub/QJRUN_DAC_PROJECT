@@ -40,6 +40,10 @@ public class Plano {
     @JsonIgnore
     private List<Aluno> alunos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "plano")
+    @JsonIgnore
+    private List<Pagamento> pagamentos = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "administrador_id", nullable = false)
     private Administrador administrador;
