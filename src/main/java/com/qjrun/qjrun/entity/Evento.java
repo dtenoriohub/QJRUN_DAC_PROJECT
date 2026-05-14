@@ -47,6 +47,10 @@ public class Evento {
             inverseJoinColumns = @JoinColumn(name = "aluno_id")
     )
     private List<Aluno> inscritos;
+
+    @ManyToOne
+    @JoinColumn(name = "administrador_id", nullable = false)
+    private Administrador administrador;
 }
 
 

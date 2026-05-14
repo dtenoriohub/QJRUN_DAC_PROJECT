@@ -25,13 +25,24 @@ public class PagamentoService {
     @Transactional
     public Pagamento create(Pagamento pagamento) {
 
-        Aluno aluno = alunoRepository.findById(pagamento.getAluno().getId()).orElseThrow(() -> new RuntimeException("Aluno não encontrado."));
+        Aluno aluno = alunoRepository.findById(
+                pagamento.getAluno().getId()
+        ).orElseThrow(() -> new RuntimeException("Aluno não encontrado."));
+
+        if (!aluno.getAtivo()) {
+            throw new RuntimeException("Não é possível gerar cobrança para aluno inativo.");
+        }
 
         pagamento.setAluno(aluno);
+        // vincula automaticamente o plano atual do aluno
+        pagamento.setPlano(aluno.getPlano());
+
         pagamento.setStatus(StatusPagamento.PENDENTE);
 
-        // Gerar código PEX simulado
-        pagamento.setPixCopiaECola("PIX-QJRUN-" + aluno.getId() + "-" + pagamento.getReferencia());
+        // gerar código PIX simulado
+        pagamento.setPixCopiaECola(
+                "PIX-QJRUN-" + aluno.getId() + "-" + pagamento.getReferencia()
+        );
 
         return pagamentoRepository.save(pagamento);
     }

@@ -1,7 +1,11 @@
 package com.qjrun.qjrun.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,4 +32,12 @@ public class Administrador {
     @Builder.Default
     @Column(nullable = false)
     private boolean ativo = true;
+
+    @OneToMany(mappedBy = "administrador")
+    @JsonIgnore
+    private List<Plano> planos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "administrador")
+    @JsonIgnore
+    private List<Evento> eventos = new ArrayList<>();
 }
