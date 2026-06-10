@@ -33,11 +33,11 @@ public class EventoController {
 
     // CREATE (Somente Administrador pode criar novas provas)
     @PostMapping
-    public ResponseEntity<Evento> create(@RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader) {
+    public ResponseEntity<Evento> create(@RequestBody Evento evento, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO")  String perfilHeader, @RequestHeader(value = "Usuario-Id") Long usuarioId) {
 
         AuthUtil.exigirAdmin(perfilHeader);
 
-        Evento eventoSalvo = eventoService.save(evento);
+        Evento eventoSalvo = eventoService.save(evento,  usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoSalvo);
     }
 
