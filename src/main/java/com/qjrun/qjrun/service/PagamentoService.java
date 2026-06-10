@@ -57,6 +57,12 @@ public class PagamentoService {
         return pagamentoRepository.findByAlunoId(alunoId);
     }
 
+    // VERIFICAR SE O ALUNO ESTÁ INADIMPLENTE
+    public boolean existePagamentoAtrasado(Aluno aluno) {
+
+        return pagamentoRepository.existsByAlunoAndStatus(aluno, StatusPagamento.ATRASADO);
+    }
+
     // VERIFICAR PAGAMENTOS EM ATRASO
     @Scheduled(fixedDelay = 10000) //executa a cada 10 segundos para fins de teste
     @Transactional
