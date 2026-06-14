@@ -1,6 +1,7 @@
 package com.qjrun.qjrun.entity;
 
 import com.qjrun.qjrun.enums.StatusPagamento;
+import com.qjrun.qjrun.enums.TipoPagamento;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,12 +40,22 @@ public class Pagamento {
         @Column(length = 1000)
         private String pixCopiaECola;
 
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        private TipoPagamento tipoPagamento;
+
+        // RELACIONAMENTO OBRIGATÓRIO
         @ManyToOne
         @JoinColumn(name = "aluno_id", nullable = false)
         private Aluno aluno;
 
+        // RELACIONAMENTOS CONDICIONAIS
         @ManyToOne
-        @JoinColumn(name = "plano_id", nullable = false)
+        @JoinColumn(name = "plano_id")
         private Plano plano;
+
+        @ManyToOne
+        @JoinColumn(name = "inscricao_id")
+        private Inscricao inscricao;
     }
 
