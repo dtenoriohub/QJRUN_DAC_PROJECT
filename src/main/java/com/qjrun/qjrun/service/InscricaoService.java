@@ -22,6 +22,7 @@ public class InscricaoService {
     private final EventoService eventoService;
     private final PagamentoService pagamentoService;
 
+    // CREATE
     @Transactional
     public Inscricao inscrever(Long alunoId, Long eventoId) {
 
@@ -39,6 +40,7 @@ public class InscricaoService {
         return inscricaoRepository.save(inscricao);
     }
 
+    // DELETE
     @Transactional
     public void cancelarInscricao(Long alunoId, Long eventoId) {
 
@@ -53,6 +55,7 @@ public class InscricaoService {
         inscricaoRepository.save(inscricao);
     }
 
+    // READ
     public List<Inscricao> listarInscricoesDoAluno(Long alunoId) {
 
         Aluno aluno = alunoService.findById(alunoId);
