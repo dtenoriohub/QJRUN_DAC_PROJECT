@@ -3,5 +3,5 @@ package com.qjrun.qjrun.enums;
 public enum PerfilAcesso {
 
     ROLE_ADMIN,
-    ROLE_ALUNO,
+    ROLE_ALUNO
 }
