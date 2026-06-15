@@ -19,4 +19,25 @@ public class AuthUtil {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erro: o perfil fornecido é inválido.");
         }
     }
+
+    public static void exigirAdminOuAluno(String perfilHeader, Long usuarioLogadoId, Long alunoAlvoId) {
+        try {
+            PerfilAcesso perfil = PerfilAcesso.valueOf(perfilHeader);
+
+            if (perfil == PerfilAcesso.ROLE_ADMIN) {
+                return;
+            }
+
+            if (perfil == PerfilAcesso.ROLE_ALUNO) {
+
+                // se for o aluno, verifica se o ID bate com o ID alvo
+                if (!usuarioLogadoId.equals(alunoAlvoId)) {
+
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado: você só tem permissão para acessar os seus próprios dados.");
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erro: o perfil fornecido é inválido.");
+        }
+    }
 }

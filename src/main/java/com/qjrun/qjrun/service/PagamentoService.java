@@ -4,6 +4,7 @@ package com.qjrun.qjrun.service;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Pagamento;
 import com.qjrun.qjrun.enums.StatusPagamento;
+import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.AlunoRepository;
 import com.qjrun.qjrun.repository.PagamentoRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,36 +26,42 @@ public class PagamentoService {
     @Transactional
     public Pagamento create(Pagamento pagamento) {
 
-        Aluno aluno = alunoRepository.findById(
-                pagamento.getAluno().getId()
-        ).orElseThrow(() -> new RuntimeException("Aluno não encontrado."));
-
-        if (!aluno.getAtivo()) {
-            throw new RuntimeException("Não é possível gerar cobrança para aluno inativo.");
-        }
+        // Validação comum para qualquer pagamento
+        Aluno aluno = validarEBuscarAluno(pagamento.getAluno().getId());
 
         pagamento.setAluno(aluno);
-        // vincula automaticamente o plano atual do aluno
-        pagamento.setPlano(aluno.getPlano());
-
         pagamento.setStatus(StatusPagamento.PENDENTE);
 
-        // gerar código PIX simulado
-        pagamento.setPixCopiaECola(
-                "PIX-QJRUN-" + aluno.getId() + "-" + pagamento.getReferencia()
-        );
+        // Verifica o tipo de cobrança
+        if (pagamento.getTipoPagamento() == TipoPagamento.PLANO) {
+            configurarPagamentoDePlano(pagamento, aluno);
+
+        } else if (pagamento.getTipoPagamento() == TipoPagamento.INSCRICAO) {
+            configurarPagamentoDeInscricao(pagamento, aluno);
+
+        } else {
+            throw new RuntimeException("Tipo de pagamento inválido ou não informado.");
+        }
 
         return pagamentoRepository.save(pagamento);
     }
 
     // READ
     public List<Pagamento> findAll() {
+
         return pagamentoRepository.findAll();
     }
 
     // READ (buscar as faturas de um aluno específico)
     public List<Pagamento> findByAlunoId(Long alunoId) {
+
         return pagamentoRepository.findByAlunoId(alunoId);
+    }
+
+    // VERIFICAR SE O ALUNO ESTÁ INADIMPLENTE
+    public boolean existePagamentoAtrasado(Aluno aluno) {
+
+        return pagamentoRepository.existsByAlunoAndStatus(aluno, StatusPagamento.ATRASADO);
     }
 
     // VERIFICAR PAGAMENTOS EM ATRASO
@@ -83,5 +90,41 @@ public class PagamentoService {
         pagamento.setDataPagamento(LocalDate.now());
 
         return pagamentoRepository.save(pagamento);
+    }
+
+    // MÉTODOS AUXILIARES
+    private Aluno validarEBuscarAluno(Long alunoId) {
+
+        Aluno aluno = alunoRepository.findById(alunoId).orElseThrow(() -> new RuntimeException("Aluno não encontrado."));
+
+        if (!aluno.getAtivo()) {
+            throw new RuntimeException("Não é possível gerar cobrança para um aluno inativo.");
+        }
+
+        return aluno;
+    }
+
+    private void configurarPagamentoDePlano(Pagamento pagamento, Aluno aluno) {
+
+        if (aluno.getPlano() == null) {
+            throw new RuntimeException("O aluno não possui um plano vinculado para gerar a mensalidade.");
+        }
+
+        // Amarra o plano e zera a inscrição para garantir a exclusividade mútua
+        pagamento.setPlano(aluno.getPlano());
+        pagamento.setInscricao(null);
+
+        pagamento.setPixCopiaECola("PIX-QJRUN-PLANO-" + aluno.getId() + "-" + pagamento.getReferencia());
+    }
+
+    private void configurarPagamentoDeInscricao(Pagamento pagamento, Aluno aluno) {
+
+        if (pagamento.getInscricao() == null || pagamento.getInscricao().getId() == null) {
+            throw new RuntimeException("Para gerar a taxa de um evento, a inscrição correspondente precisa ser informada.");
+        }
+
+        // Amarra a inscrição e zera o plano para garantir a exclusividade mútua
+        pagamento.setPlano(null);
+        pagamento.setPixCopiaECola("PIX-QJRUN-INSC-" + aluno.getId() + "-" + pagamento.getInscricao().getId());
     }
 }

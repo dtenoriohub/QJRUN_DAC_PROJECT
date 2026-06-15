@@ -1,6 +1,8 @@
 package com.qjrun.qjrun.service;
 
+import com.qjrun.qjrun.entity.Administrador;
 import com.qjrun.qjrun.entity.Evento;
+import com.qjrun.qjrun.repository.AdministradorRepository;
 import lombok.RequiredArgsConstructor;
 import com.qjrun.qjrun.repository.EventoRepository;
 import org.springframework.beans.BeanUtils;
@@ -14,12 +16,20 @@ import java.util.List;
 public class EventoService {
 
     private final EventoRepository eventoRepository;
+    private final AdministradorRepository administradorRepository;
 
     // CREATE
     @Transactional
-    public Evento save(Evento evento) {
+    public Evento save(Evento evento, Long administradorId) {
+        // procura o admin que está fazendo a requisição
+        Administrador administrador = administradorRepository.findById(administradorId).orElseThrow(() -> new RuntimeException("Administrador não encontrado."));
+
         evento.setId(null); // impede atualização acidental de um evento que já existe
         evento.setAtivo(true); // garante que novos eventos "nasçam" ativos
+
+        // vincula o administrador ao evento
+        evento.setAdministrador(administrador);
+
         return eventoRepository.save(evento);
     }
 
