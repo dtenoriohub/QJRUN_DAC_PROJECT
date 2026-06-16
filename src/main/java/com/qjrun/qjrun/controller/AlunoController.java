@@ -53,9 +53,11 @@ public class AlunoController {
 
     //UPDATE (o aluno pode atualizar alguns dos próprios dados)
     @PutMapping("/{id}")
-    public ResponseEntity<Aluno> update(@PathVariable Long id, @RequestBody Aluno aluno) {
+    public ResponseEntity<Aluno> update(@PathVariable Long id, @RequestBody Aluno aluno, @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO") String perfilHeader, @RequestHeader(value = "Usuario-Id") Long usuarioId) {
 
-        Aluno alunoAtualizado = alunoService.update(id, aluno);
+        AuthUtil.exigirAdminOuAluno(perfilHeader, usuarioId, id);
+
+        Aluno alunoAtualizado = alunoService.update(id, aluno, perfilHeader);
         return ResponseEntity.ok(alunoAtualizado);
     }
 }
