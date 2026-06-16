@@ -2,6 +2,8 @@ package com.qjrun.qjrun.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -40,6 +42,9 @@ public class Evento {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @Column(precision = 10, scale = 2, nullable = false)
+    private BigDecimal valor;
+
     @ManyToMany
     @JoinTable(
             name = "evento_aluno",
@@ -52,6 +57,3 @@ public class Evento {
     @JoinColumn(name = "administrador_id", nullable = false)
     private Administrador administrador;
 }
-
-
-
