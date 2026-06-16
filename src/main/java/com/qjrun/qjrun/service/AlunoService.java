@@ -11,8 +11,10 @@ import com.qjrun.qjrun.repository.PlanoRepository;
 import com.qjrun.qjrun.repository.TurmaRepository;
 import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -50,14 +52,14 @@ public class AlunoService {
 
     // UPDATE
     @Transactional
-    public Aluno update(Long id, Aluno alunoAtualizado) {
+    public Aluno update(Long id, Aluno alunoAtualizado, String perfilUsuario) {
         Aluno alunoExistente = findById(id);
 
         //Chama os metodos de atualização separadamente
         validarEAtualizarEmail(alunoAtualizado, alunoExistente);
         atualizarDadosBase(alunoAtualizado, alunoExistente);
-        atualizarTurma(alunoAtualizado, alunoExistente);
-        atualizarPlano(alunoAtualizado, alunoExistente);
+        atualizarTurma(alunoAtualizado, alunoExistente, perfilUsuario);
+        atualizarPlano(alunoAtualizado, alunoExistente, perfilUsuario);
 
         return alunoRepository.save(alunoExistente);
     }
@@ -70,26 +72,9 @@ public class AlunoService {
 
         Aluno aluno = findById(id);
 
-        if(!"ROLE_ALUNO".equals(perfilUsuario)){
-            throw new RuntimeException("aluno já desativado!");
-        }
+        validarSeAlunoJaEstaDesativado(aluno);
+        validarPendenciasFinanceirasParaCancelamento(aluno);
 
-        //verificacao para caso possua pendencia, não ser removido/deletado
-        boolean possuiPendencia = pagamentoRepository.findByAlunoId(id)
-                .stream()
-                .anyMatch(pagamento ->
-                        pagamento.getStatus() == StatusPagamento.PENDENTE || pagamento.getStatus() == StatusPagamento.ATRASADO
-                );
-        //excecao para ser lancado caso o aluno tenha pendencia ao ser deletado
-        if (possuiPendencia) {
-            throw new RuntimeException(
-                    "Não é possível cancelar matrícula com pagamentos pendentes ou atrasados."
-            );
-        }
-
-        if (!aluno.getAtivo()) {
-            throw new RuntimeException("Aluno já está desativado.");
-        }
         aluno.setAtivo(false);
         alunoRepository.save(aluno);
     }
@@ -117,16 +102,34 @@ public class AlunoService {
         alunoExistente.setTelefone(alunoAtualizado.getTelefone());
     }
 
-    private void atualizarTurma(Aluno alunoAtualizado, Aluno alunoExistente) {
+    private void atualizarTurma(Aluno alunoAtualizado, Aluno alunoExistente, String perfilUsuario) {
 
-        if (alunoAtualizado.getTurma() != null && alunoAtualizado.getTurma().getId() != null) {
-            Turma novaTurma = turmaRepository.findById(alunoAtualizado.getTurma().getId()).orElseThrow(() -> new RuntimeException("Nova turma não encontrada."));
+        boolean tentouAtualizarTurma = alunoAtualizado.getTurma() != null && alunoAtualizado.getTurma().getId() != null;
+
+        if ("ROLE_ALUNO".equals(perfilUsuario)) {
+            Long idTurmaAtual = (alunoExistente.getTurma() != null) ? alunoExistente.getTurma().getId() : null;
+
+            // Se ele tentou enviar uma turma e o ID for diferente da turma atual, dispara o erro
+            if (tentouAtualizarTurma && !alunoAtualizado.getTurma().getId().equals(idTurmaAtual)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Acesso negado: Alunos não podem alterar a própria turma. Solicite a mudança à administração.");
+            }
+
+            return;
+        }
+
+        if (tentouAtualizarTurma) {
+            Turma novaTurma = turmaRepository.findById(alunoAtualizado.getTurma().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova turma não encontrada."));
 
             alunoExistente.setTurma(novaTurma);
         }
     }
 
-    private void atualizarPlano(Aluno alunoAtualizado,  Aluno alunoExistente) {
+    private void atualizarPlano(Aluno alunoAtualizado,  Aluno alunoExistente, String perfilUsuario) {
+
+        if ("ROLE_ALUNO".equals(perfilUsuario)) {
+            return;
+        }
 
         if (alunoAtualizado.getPlano() != null && alunoAtualizado.getPlano().getId() != null) {
             Plano novoPlano = planoRepository.findById(alunoAtualizado.getPlano().getId()).orElseThrow(() -> new RuntimeException("Novo plano não encontrado."));
@@ -150,20 +153,50 @@ public class AlunoService {
 
     private void vincularTurmaNaCriacao(Aluno aluno, String perfilUsuario) {
 
+        boolean tentouEscolherTurma = aluno.getTurma() != null && aluno.getTurma().getId() != null;
+
         // Regra de negócio: se for o próprio aluno se cadastrando, a atribuição a uma turma é bloqueada (só o admin pode atribuir um aluno a uma turma)
         if ("ROLE_ALUNO".equals(perfilUsuario)) {
+            if (tentouEscolherTurma) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Acesso negado: Alunos não podem escolher a própria turma no cadastro. Apenas o administrador faz essa atribuição.");
+            }
+
+            // Se ele mandou vazio (correto), garante que o banco salve como nulo e encerra
             aluno.setTurma(null);
             return;
         }
 
         // Cláusula de Guarda do Admin: Se não mandou turma (ou mandou sem ID), zera e sai
-        if (aluno.getTurma() == null || aluno.getTurma().getId() == null) {
+        if (!tentouEscolherTurma) {
             aluno.setTurma(null);
             return;
         }
 
-        Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new RuntimeException("Turma não encontrada."));
+        Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não encontrada."));
 
         aluno.setTurma(turma);
+    }
+
+    // REGRAS DE INATIVAÇÃO
+    private void validarSeAlunoJaEstaDesativado(Aluno aluno) {
+
+        if (!aluno.getAtivo()) {
+            throw new RuntimeException("Aluno já está desativado.");
+        }
+    }
+
+    private void validarPendenciasFinanceirasParaCancelamento(Aluno aluno) {
+
+        boolean possuiPendencia = pagamentoRepository.findByAlunoId(aluno.getId())
+                .stream()
+                .anyMatch(pagamento ->
+                        pagamento.getStatus() == StatusPagamento.PENDENTE ||
+                                pagamento.getStatus() == StatusPagamento.ATRASADO
+                );
+
+        if (possuiPendencia) {
+            throw new RuntimeException("Não é possível cancelar matrícula com pagamentos pendentes ou atrasados.");
+        }
     }
 }
