@@ -3,11 +3,15 @@ package com.qjrun.qjrun.service;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Evento;
 import com.qjrun.qjrun.entity.Inscricao;
+import com.qjrun.qjrun.entity.Pagamento;
+import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.InscricaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,15 +33,16 @@ public class InscricaoService {
         Aluno aluno = alunoService.findById(alunoId);
         Evento evento = eventoService.findById(eventoId);
 
+        // Valida se o aluno pode se inscrever
         validarRegrasDeInscricao(aluno, evento);
 
-        Inscricao inscricao = Inscricao.builder()
-                .aluno(aluno)
-                .evento(evento)
-                .dataInscricao(LocalDateTime.now())
-                .build();
+        // Salva o registro no banco
+        Inscricao inscricaoSalva = registrarNovaInscricao(aluno, evento);
 
-        return inscricaoRepository.save(inscricao);
+        // Gera fluxo financeiro se for necessário
+        gerarCobrançaSeEventoPago(aluno, evento, inscricaoSalva);
+
+        return inscricaoSalva;
     }
 
     // DELETE
@@ -93,4 +98,36 @@ public class InscricaoService {
             throw new RuntimeException("As vagas para este evento já estão esgotadas.");
         }
     }
+
+    private Inscricao registrarNovaInscricao(Aluno aluno, Evento evento) {
+
+        Inscricao inscricao = Inscricao.builder()
+                .aluno(aluno)
+                .evento(evento)
+                .dataInscricao(LocalDateTime.now())
+                .ativo(true)
+                .build();
+
+        return inscricaoRepository.save(inscricao);
+    }
+
+    private void gerarCobrançaSeEventoPago(Aluno aluno, Evento evento,  Inscricao inscricao) {
+
+        // Se o evento for gratuito, sai do método
+        if (evento.getValor() == null || evento.getValor().compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        Pagamento taxaInscricao = Pagamento.builder()
+                .aluno(aluno)
+                .inscricao(inscricao)
+                .tipoPagamento(TipoPagamento.INSCRICAO)
+                .valor(evento.getValor())
+                .referencia("Inscrição: " + evento.getNome())
+                .vencimento(LocalDate.now().plusDays(2))
+                .build();
+
+        pagamentoService.create(taxaInscricao);
+    }
+
 }
