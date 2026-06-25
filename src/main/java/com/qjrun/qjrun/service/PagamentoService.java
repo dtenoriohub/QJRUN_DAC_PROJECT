@@ -65,7 +65,7 @@ public class PagamentoService {
     }
 
     // VERIFICAR PAGAMENTOS EM ATRASO
-    @Scheduled(fixedDelay = 10000) //executa a cada 10 segundos para fins de teste
+    @Scheduled(fixedDelay = 600000) //executa a cada 10 segundos para fins de teste
     @Transactional
     public void atualizarPagamentosAtrasados() {
         List<Pagamento> pendentes = pagamentoRepository.findByStatus(StatusPagamento.PENDENTE);
