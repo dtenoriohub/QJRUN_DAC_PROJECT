@@ -3,6 +3,7 @@ package com.qjrun.qjrun.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,28 +11,11 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Administrador {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String nome;
-
-    @Column(nullable = false, unique = true)
-    private String cpf;
-
-    @Column(unique = true)
-    private String email;
-
-    private String telefone;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean ativo = true;
+@SuperBuilder
+@PrimaryKeyJoinColumn(name = "usuario_id")
+public class Administrador extends Usuario {
 
     @OneToMany(mappedBy = "administrador")
     @JsonIgnore
