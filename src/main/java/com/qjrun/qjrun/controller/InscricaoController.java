@@ -53,6 +53,8 @@ public class InscricaoController {
             @RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO") String perfilHeader,
             @RequestHeader(value = "Usuario-Id")   Long usuarioLogadoId) {
 
+        AuthUtil.exigirAdminOuAluno(perfilHeader, usuarioLogadoId, alunoId);
+
         inscricaoService.cancelarInscricao(alunoId, eventoId);
 
         return ResponseEntity.noContent().build();
