@@ -7,8 +7,10 @@ import com.qjrun.qjrun.entity.Pagamento;
 import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.InscricaoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,11 +55,14 @@ public class InscricaoService {
         Evento evento = eventoService.findById(eventoId);
 
         // Busca a caixa (Optional) com a inscrição ativa
-        Inscricao inscricao = inscricaoRepository.findByAlunoAndEventoAndAtivoTrue(aluno, evento).orElseThrow(() -> new RuntimeException("Este aluno não possui inscrição ativa neste evento."));
+        Inscricao inscricao = inscricaoRepository.findByAlunoAndEventoAndAtivoTrue(aluno, evento).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Este aluno não possui inscrição ativa neste evento."));
 
         // Inativa a inscrição
         inscricao.setAtivo(false);
         inscricaoRepository.save(inscricao);
+
+        // Cancela cobrança pendente associada a essa inscrição
+        pagamentoService.cancelarPagamentosPendentesDaInscricao(inscricao);
     }
 
     // READ
