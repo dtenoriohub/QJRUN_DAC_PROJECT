@@ -2,37 +2,25 @@ package com.qjrun.qjrun.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDate;
 
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="Alunos")
-public class Aluno {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String nome;
+@SuperBuilder
+@PrimaryKeyJoinColumn(name = "usuario_id")
+@Table(name="alunos")
+public class Aluno extends Usuario {
 
     @Column(nullable = false, unique = true)
     private String matricula;
 
-    @Column(unique = true)
-    private String email;
-
-    private String telefone;
-
     @Column(nullable = false)
     private LocalDate dataNascimento;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean ativo=true;
 
     // CARDINALIDADE
     @ManyToOne

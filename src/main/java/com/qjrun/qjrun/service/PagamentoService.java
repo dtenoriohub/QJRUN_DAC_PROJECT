@@ -2,6 +2,7 @@ package com.qjrun.qjrun.service;
 
 
 import com.qjrun.qjrun.entity.Aluno;
+import com.qjrun.qjrun.entity.Inscricao;
 import com.qjrun.qjrun.entity.Pagamento;
 import com.qjrun.qjrun.enums.StatusPagamento;
 import com.qjrun.qjrun.enums.TipoPagamento;
@@ -126,5 +127,20 @@ public class PagamentoService {
         // Amarra a inscrição e zera o plano para garantir a exclusividade mútua
         pagamento.setPlano(null);
         pagamento.setPixCopiaECola("PIX-QJRUN-INSC-" + aluno.getId() + "-" + pagamento.getInscricao().getId());
+    }
+
+    @Transactional
+    public void cancelarPagamentosPendentesDaInscricao(Inscricao inscricao) {
+
+        List<Pagamento> pagamentosDaInscricao = pagamentoRepository.findByInscricao(inscricao);
+
+        for (Pagamento pagamento : pagamentosDaInscricao) {
+
+            // Só cancela se o aluno ainda não tiver pago
+            if (pagamento.getStatus() == StatusPagamento.PENDENTE) {
+                pagamento.setStatus(StatusPagamento.CANCELADO);
+                pagamentoRepository.save(pagamento);
+            }
+        }
     }
 }

@@ -4,11 +4,9 @@ package com.qjrun.qjrun.service;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.entity.Turma;
+import com.qjrun.qjrun.enums.PerfilAcesso;
 import com.qjrun.qjrun.enums.StatusPagamento;
-import com.qjrun.qjrun.repository.AlunoRepository;
-import com.qjrun.qjrun.repository.PagamentoRepository;
-import com.qjrun.qjrun.repository.PlanoRepository;
-import com.qjrun.qjrun.repository.TurmaRepository;
+import com.qjrun.qjrun.repository.*;
 import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +24,7 @@ public class AlunoService {
     private final PlanoRepository planoRepository;
     private final TurmaRepository turmaRepository;
     private final PagamentoRepository pagamentoRepository;
+    private final UsuarioRepository usuarioRepository;
 
 
     // CREATE
@@ -33,6 +32,10 @@ public class AlunoService {
     public Aluno save(Aluno aluno, String perfilUsuario) {
         aluno.setId(null);
         aluno.setAtivo(true);
+
+        aluno.setPerfilAcesso(PerfilAcesso.ROLE_ALUNO);
+
+        validarEmailUnico(aluno.getEmail());
 
         vincularPlanoNaCriacao(aluno);
         vincularTurmaNaCriacao(aluno, perfilUsuario);
@@ -89,8 +92,8 @@ public class AlunoService {
             return;
         }
 
-        if (alunoRepository.findByEmail(novoEmail).isPresent()) {
-            throw new RuntimeException("Ops! O e-mail " + novoEmail + " já está sendo usado!");
+        if (usuarioRepository.findByEmail(novoEmail).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + novoEmail + " já está sendo usado!");
         }
 
         alunoExistente.setEmail(novoEmail);
@@ -176,6 +179,13 @@ public class AlunoService {
         Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não encontrada."));
 
         aluno.setTurma(turma);
+    }
+
+    private void validarEmailUnico(String email) {
+
+        if (email != null && !email.isBlank() && usuarioRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + email + " já está cadastrado no sistema!");
+        }
     }
 
     // REGRAS DE INATIVAÇÃO

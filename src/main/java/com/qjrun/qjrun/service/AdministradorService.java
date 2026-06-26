@@ -1,10 +1,14 @@
 package com.qjrun.qjrun.service;
 
 import com.qjrun.qjrun.entity.Administrador;
+import com.qjrun.qjrun.enums.PerfilAcesso;
 import com.qjrun.qjrun.repository.AdministradorRepository;
+import com.qjrun.qjrun.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -13,12 +17,18 @@ import java.util.List;
 public class AdministradorService {
 
     private final AdministradorRepository administradorRepository;
+    private final UsuarioRepository usuarioRepository;
 
     // CREATE
     @Transactional
     public Administrador save(Administrador administrador) {
         administrador.setId(null); // impede o envio de um ID prevenindo a atualização de um registro que já existe
         administrador.setAtivo(true);
+
+        administrador.setPerfilAcesso(PerfilAcesso.ROLE_ADMIN);
+
+        validarEmailUnico(administrador.getEmail());
+
         return administradorRepository.save(administrador);
     }
 
@@ -55,6 +65,7 @@ public class AdministradorService {
 
     // METODOS AUXILIARES
     private void validarEAtualizarEmail(Administrador administradorAtualizado, Administrador administradorExistente) {
+
         String novoEmail = administradorAtualizado.getEmail();
 
         // Se não tiver nenhuma alteração real sai do método
@@ -62,10 +73,17 @@ public class AdministradorService {
             return;
         }
 
-        if(administradorRepository.findByEmail(novoEmail).isPresent()) {
-            throw new RuntimeException("Ops! O e-mail " + novoEmail + " já está sendo usado!");
+        if(usuarioRepository.findByEmail(novoEmail).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + novoEmail + " já está sendo usado!");
         }
 
         administradorExistente.setEmail(novoEmail);
+    }
+
+    private void validarEmailUnico(String email) {
+
+        if (email != null && !email.isBlank() && usuarioRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + email + " já está cadastrado no sistema!");
+        }
     }
 }
