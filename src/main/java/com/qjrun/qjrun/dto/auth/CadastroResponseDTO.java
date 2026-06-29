@@ -1,12 +1,15 @@
 package com.qjrun.qjrun.dto.auth;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @AllArgsConstructor
 public class CadastroResponseDTO {
-
+    private Long id;
+    private String nome;
+    private String email;
     private String mensagem;
+
 
 }
