@@ -1,7 +1,11 @@
 package com.qjrun.qjrun.entity;
 
+
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
@@ -12,8 +16,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@Table(name = "alunos")
 @PrimaryKeyJoinColumn(name = "usuario_id")
-@Table(name="alunos")
 public class Aluno extends Usuario {
 
     @Column(nullable = false, unique = true)
@@ -22,7 +26,6 @@ public class Aluno extends Usuario {
     @Column(nullable = false)
     private LocalDate dataNascimento;
 
-    // CARDINALIDADE
     @ManyToOne
     @JoinColumn(name = "plano_id", nullable = false)
     private Plano plano;

@@ -1,4 +1,4 @@
-package com.qjrun.qjrun.dto.mapper;
+package com.qjrun.qjrun.mapper;
 
 import com.qjrun.qjrun.dto.aluno.AlunoResponseDTO;
 import com.qjrun.qjrun.entity.Aluno;

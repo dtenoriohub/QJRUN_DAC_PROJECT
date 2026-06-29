@@ -1,5 +1,4 @@
 package com.qjrun.qjrun.controller;
-
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.service.AlunoService;
 import com.qjrun.qjrun.util.AuthUtil;
@@ -7,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
