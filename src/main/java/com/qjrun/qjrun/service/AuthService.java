@@ -1,12 +1,11 @@
 package com.qjrun.qjrun.service;
 
 import com.qjrun.qjrun.dto.auth.*;
-import com.qjrun.qjrun.entity.Administrador; // Garante o import correto do Admin
+import com.qjrun.qjrun.entity.Administrador;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.entity.Usuario;
 import com.qjrun.qjrun.enums.PerfilAcesso;
-import com.qjrun.qjrun.mapper.AuthMapper;
 import com.qjrun.qjrun.repository.AdministradorRepository;
 import com.qjrun.qjrun.repository.AlunoRepository;
 import com.qjrun.qjrun.repository.PlanoRepository;
@@ -18,7 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // 🔑 Usando o pacote correto do Spring para a transação
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class AuthService {
     }
 
     /**
-     * LOGIN
+     * LOGIN 🎯 (Ajustado para retornar o ID explicitamente)
      */
     public LoginResponseDTO login(LoginRequestDTO dto) {
         Authentication authentication = authenticationManager.authenticate(
@@ -51,13 +50,21 @@ public class AuthService {
         Usuario usuario = (Usuario) authentication.getPrincipal();
         String token = jwtService.generateToken(usuario);
 
-        return AuthMapper.toLoginResponse(usuario, token);
+        // 🚀 Ajuste Crítico: Instancia o DTO diretamente passando o ID, Nome, Email e a Role unificada.
+        // Isso anula qualquer falha ou esquecimento de mapeamento que pudesse existir no seu AuthMapper!
+        return new LoginResponseDTO(
+                token,
+                usuario.getId(),            // 🔑 Envia o ID para o LocalStorage do React
+                usuario.getNome(),          // 👤 Envia o Nome para a Sidebar do Frontend
+                usuario.getEmail(),
+                usuario.getPerfilAcesso().name()
+        );
     }
 
     /**
      * CADASTRO INTELIGENTE
      */
-    @Transactional // 🔑 Garante atomicidade e sincronia imediata com o banco de dados
+    @Transactional
     public CadastroResponseDTO cadastrar(CadastroRequestDTO dto) {
 
         // 1. Validações de unicidade
@@ -81,7 +88,6 @@ public class AuthService {
             admin.setPerfilAcesso(PerfilAcesso.ROLE_ADMIN);
             admin.setAtivo(true);
 
-            // 🔑 Salva explicitamente no repositório de Administrador para isolar a herança
             administradorRepository.save(admin);
 
             return new CadastroResponseDTO(
@@ -107,7 +113,6 @@ public class AuthService {
             aluno.setAtivo(true);
             aluno.setMatricula(gerarMatricula());
 
-            // 🔑 Salva explicitamente no repositório de Aluno
             alunoRepository.save(aluno);
 
             return new CadastroResponseDTO(
