@@ -1,6 +1,7 @@
 package com.qjrun.qjrun.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,7 +47,8 @@ public class Plano {
 
     @ManyToOne
     @JoinColumn(name = "administrador_id", nullable = false)
+    @JsonIgnoreProperties({"senha", "planos", "perfilAcesso"}) // 🔑 Traz apenas dados básicos do admin e evita loops cíclicos
     private Administrador administrador;
-
-
 }
+
+

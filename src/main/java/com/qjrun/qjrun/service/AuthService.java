@@ -1,11 +1,13 @@
 package com.qjrun.qjrun.service;
 
 import com.qjrun.qjrun.dto.auth.*;
+import com.qjrun.qjrun.entity.Administrador; // Garante o import correto do Admin
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.entity.Usuario;
 import com.qjrun.qjrun.enums.PerfilAcesso;
 import com.qjrun.qjrun.mapper.AuthMapper;
+import com.qjrun.qjrun.repository.AdministradorRepository;
 import com.qjrun.qjrun.repository.AlunoRepository;
 import com.qjrun.qjrun.repository.PlanoRepository;
 import com.qjrun.qjrun.repository.UsuarioRepository;
@@ -16,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // 🔑 Usando o pacote correto do Spring para a transação
 
 @Service
 @RequiredArgsConstructor
@@ -27,17 +30,17 @@ public class AuthService {
     private final JwtService jwtService;
 
     private final UsuarioRepository usuarioRepository;
+    private final AdministradorRepository administradorRepository;
     private final AlunoRepository alunoRepository;
-
 
     private String gerarMatricula() {
         return "MAT" + System.currentTimeMillis();
     }
+
     /**
      * LOGIN
      */
     public LoginResponseDTO login(LoginRequestDTO dto) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         dto.getEmail(),
@@ -46,53 +49,73 @@ public class AuthService {
         );
 
         Usuario usuario = (Usuario) authentication.getPrincipal();
-
         String token = jwtService.generateToken(usuario);
 
         return AuthMapper.toLoginResponse(usuario, token);
     }
 
     /**
-     * CADASTRO
+     * CADASTRO INTELIGENTE
      */
+    @Transactional // 🔑 Garante atomicidade e sincronia imediata com o banco de dados
     public CadastroResponseDTO cadastrar(CadastroRequestDTO dto) {
 
+        // 1. Validações de unicidade
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("E-mail já cadastrado.");
         }
-
         if (usuarioRepository.existsByCpf(dto.getCpf())) {
             throw new RuntimeException("CPF já cadastrado.");
         }
 
+        // 2. Checa se é o primeiríssimo usuário do sistema
+        boolean bancoVazio = usuarioRepository.count() == 0;
 
-        Plano planoPadrao = planoRepository.findByTipo("FREE")
-                .orElseThrow(() ->
-                        new RuntimeException("Plano FREE não encontrado."));
+        if (bancoVazio) {
+            // 👑 PRIMEIRO USUÁRIO -> ADMINISTRADOR
+            Administrador admin = new Administrador();
+            admin.setNome(dto.getNome());
+            admin.setCpf(dto.getCpf());
+            admin.setEmail(dto.getEmail());
+            admin.setSenha(passwordEncoder.encode(dto.getSenha()));
+            admin.setPerfilAcesso(PerfilAcesso.ROLE_ADMIN);
+            admin.setAtivo(true);
 
-        Aluno aluno = new Aluno();
+            // 🔑 Salva explicitamente no repositório de Administrador para isolar a herança
+            administradorRepository.save(admin);
 
-        aluno.setNome(dto.getNome());
-        aluno.setCpf(dto.getCpf());
-        aluno.setEmail(dto.getEmail());
-        aluno.setSenha(passwordEncoder.encode(dto.getSenha()));
-        aluno.setTelefone(dto.getTelefone());
-        aluno.setDataNascimento(dto.getDataNascimento());
+            return new CadastroResponseDTO(
+                    admin.getId(),
+                    admin.getNome(),
+                    admin.getEmail(),
+                    "Primeiro usuário criado com sucesso como ADMINISTRADOR!"
+            );
+        } else {
+            // 🏃‍♂️ PRÓXIMOS USUÁRIOS -> ALUNOS
+            Plano planoPadrao = planoRepository.findByTipo("FREE")
+                    .orElseThrow(() -> new RuntimeException("Plano FREE não encontrado."));
 
-        aluno.setPerfilAcesso(PerfilAcesso.ROLE_ALUNO);
-        aluno.setPlano(planoPadrao);
-        aluno.setAtivo(true);
+            Aluno aluno = new Aluno();
+            aluno.setNome(dto.getNome());
+            aluno.setCpf(dto.getCpf());
+            aluno.setEmail(dto.getEmail());
+            aluno.setSenha(passwordEncoder.encode(dto.getSenha()));
+            aluno.setTelefone(dto.getTelefone());
+            aluno.setDataNascimento(dto.getDataNascimento());
+            aluno.setPerfilAcesso(PerfilAcesso.ROLE_ALUNO);
+            aluno.setPlano(planoPadrao);
+            aluno.setAtivo(true);
+            aluno.setMatricula(gerarMatricula());
 
+            // 🔑 Salva explicitamente no repositório de Aluno
+            alunoRepository.save(aluno);
 
-        aluno.setMatricula(gerarMatricula());
-
-        alunoRepository.save(aluno);
-
-        return new CadastroResponseDTO(
-                aluno.getId(),
-                aluno.getNome(),
-                aluno.getEmail(),
-                "Usuário cadastrado com sucesso."
-        );
+            return new CadastroResponseDTO(
+                    aluno.getId(),
+                    aluno.getNome(),
+                    aluno.getEmail(),
+                    "Usuário cadastrado com sucesso como Aluno."
+            );
+        }
     }
 }

@@ -128,14 +128,12 @@ public class AlunoService {
         }
     }
 
-    private void atualizarPlano(Aluno alunoAtualizado,  Aluno alunoExistente, String perfilUsuario) {
-
-        if ("ROLE_ALUNO".equals(perfilUsuario)) {
-            return;
-        }
+    private void atualizarPlano(Aluno alunoAtualizado, Aluno alunoExistente, String perfilUsuario) {
+        // 🎯 AJUSTE: Trava removida! Tanto o ADMIN quanto o próprio ROLE_ALUNO agora entram aqui.
 
         if (alunoAtualizado.getPlano() != null && alunoAtualizado.getPlano().getId() != null) {
-            Plano novoPlano = planoRepository.findById(alunoAtualizado.getPlano().getId()).orElseThrow(() -> new RuntimeException("Novo plano não encontrado."));
+            Plano novoPlano = planoRepository.findById(alunoAtualizado.getPlano().getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "O plano selecionado não foi encontrado."));
 
             alunoExistente.setPlano(novoPlano);
         }
@@ -209,4 +207,5 @@ public class AlunoService {
             throw new RuntimeException("Não é possível cancelar matrícula com pagamentos pendentes ou atrasados.");
         }
     }
+
 }
