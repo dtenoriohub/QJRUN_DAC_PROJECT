@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TurmaRepository extends JpaRepository<Turma,Long> {
-
+public interface TurmaRepository extends JpaRepository<Turma, Long> {
     List<Turma> findAllByAtivoTrue();
+    long countByAtivoTrue(); // <--- Adicione esta linha
 }

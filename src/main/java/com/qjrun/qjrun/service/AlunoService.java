@@ -1,6 +1,6 @@
 package com.qjrun.qjrun.service;
 
-
+import com.qjrun.qjrun.dto.aluno.AlunoResponseDTO;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.entity.Turma;
@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,17 +31,31 @@ public class AlunoService {
     // CREATE
     @Transactional
     public Aluno save(Aluno aluno, String perfilUsuario) {
-        aluno.setId(null);
+        aluno.setId(null); // Garante que seja um insert
         aluno.setAtivo(true);
-
         aluno.setPerfilAcesso(PerfilAcesso.ROLE_ALUNO);
 
         validarEmailUnico(aluno.getEmail());
-
         vincularPlanoNaCriacao(aluno);
         vincularTurmaNaCriacao(aluno, perfilUsuario);
 
         return alunoRepository.save(aluno);
+    }
+    public List<AlunoResponseDTO> listarTodosDTO() {
+        return alunoRepository.findAllByAtivoTrue().stream()
+                .map(a -> AlunoResponseDTO.builder()
+                        .id(a.getId())
+                        .nome(a.getNome())
+                        .matricula(a.getMatricula())
+                        .cpf(a.getCpf())
+                        .email(a.getEmail())
+                        .telefone(a.getTelefone())
+                        .dataNascimento(a.getDataNascimento())
+                        .ativo(a.getAtivo())
+                        .plano(a.getPlano() != null ? a.getPlano().getTipo() : "Sem Plano")
+                        .turma(a.getTurma() != null ? a.getTurma().getNome() : "Sem Turma")
+                        .build())
+                .collect(Collectors.toList());
     }
 
     // READ
@@ -48,9 +63,9 @@ public class AlunoService {
         return alunoRepository.findAllByAtivoTrue();
     }
 
-    // READ
     public Aluno findById(Long id) {
-        return alunoRepository.findById(id).orElseThrow(()-> new RuntimeException("Aluno não encontrado!"));
+        return alunoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado!"));
     }
 
     // UPDATE
@@ -58,21 +73,18 @@ public class AlunoService {
     public Aluno update(Long id, Aluno alunoAtualizado, String perfilUsuario) {
         Aluno alunoExistente = findById(id);
 
-        //Chama os metodos de atualização separadamente
         validarEAtualizarEmail(alunoAtualizado, alunoExistente);
         atualizarDadosBase(alunoAtualizado, alunoExistente);
         atualizarTurma(alunoAtualizado, alunoExistente, perfilUsuario);
-        atualizarPlano(alunoAtualizado, alunoExistente, perfilUsuario);
+        atualizarPlano(alunoAtualizado, alunoExistente); // Removido o perfil daqui, pois a regra é genérica
 
         return alunoRepository.save(alunoExistente);
     }
 
-    // DELETE
+    // DELETE (SOFT DELETE)
     @Transactional
     public void desativar(Long id, String perfilUsuario) {
-
         AuthUtil.exigirAdmin(perfilUsuario);
-
         Aluno aluno = findById(id);
 
         validarSeAlunoJaEstaDesativado(aluno);
@@ -82,130 +94,87 @@ public class AlunoService {
         alunoRepository.save(aluno);
     }
 
-    // REGRAS DE ATUALIZAÇÃO
+    // --- REGRAS PRIVADAS ---
 
     private void validarEAtualizarEmail(Aluno alunoAtualizado, Aluno alunoExistente) {
-
-        String novoEmail = alunoAtualizado.getEmail();
-
-        if (novoEmail == null || novoEmail.isBlank() || novoEmail.equals(alunoExistente.getEmail())) {
+        if (alunoAtualizado.getEmail() == null || alunoAtualizado.getEmail().equals(alunoExistente.getEmail())) {
             return;
         }
 
-        if (usuarioRepository.findByEmail(novoEmail).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + novoEmail + " já está sendo usado!");
+        if (usuarioRepository.existsByEmail(alunoAtualizado.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já está em uso por outro usuário.");
         }
-
-        alunoExistente.setEmail(novoEmail);
+        alunoExistente.setEmail(alunoAtualizado.getEmail());
     }
 
     private void atualizarDadosBase(Aluno alunoAtualizado, Aluno alunoExistente) {
-
         alunoExistente.setNome(alunoAtualizado.getNome());
         alunoExistente.setTelefone(alunoAtualizado.getTelefone());
+        // Adicione outros campos necessários aqui
     }
 
     private void atualizarTurma(Aluno alunoAtualizado, Aluno alunoExistente, String perfilUsuario) {
-
-        boolean tentouAtualizarTurma = alunoAtualizado.getTurma() != null && alunoAtualizado.getTurma().getId() != null;
+        if (alunoAtualizado.getTurma() == null || alunoAtualizado.getTurma().getId() == null) return;
 
         if ("ROLE_ALUNO".equals(perfilUsuario)) {
-            Long idTurmaAtual = (alunoExistente.getTurma() != null) ? alunoExistente.getTurma().getId() : null;
-
-            // Se ele tentou enviar uma turma e o ID for diferente da turma atual, dispara o erro
-            if (tentouAtualizarTurma && !alunoAtualizado.getTurma().getId().equals(idTurmaAtual)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "Acesso negado: Alunos não podem alterar a própria turma. Solicite a mudança à administração.");
-            }
-
-            return;
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Alunos não podem alterar a própria turma.");
         }
 
-        if (tentouAtualizarTurma) {
-            Turma novaTurma = turmaRepository.findById(alunoAtualizado.getTurma().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova turma não encontrada."));
+        Turma novaTurma = turmaRepository.findById(alunoAtualizado.getTurma().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não encontrada."));
 
-            alunoExistente.setTurma(novaTurma);
-        }
+        alunoExistente.setTurma(novaTurma);
     }
 
-    private void atualizarPlano(Aluno alunoAtualizado, Aluno alunoExistente, String perfilUsuario) {
-        // 🎯 AJUSTE: Trava removida! Tanto o ADMIN quanto o próprio ROLE_ALUNO agora entram aqui.
-
+    private void atualizarPlano(Aluno alunoAtualizado, Aluno alunoExistente) {
         if (alunoAtualizado.getPlano() != null && alunoAtualizado.getPlano().getId() != null) {
             Plano novoPlano = planoRepository.findById(alunoAtualizado.getPlano().getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "O plano selecionado não foi encontrado."));
-
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Plano não encontrado."));
             alunoExistente.setPlano(novoPlano);
         }
     }
 
-    // REGRAS DE CRIAÇÃO
     private void vincularPlanoNaCriacao(Aluno aluno) {
-
         if (aluno.getPlano() == null || aluno.getPlano().getId() == null) {
-            throw new RuntimeException("O aluno deve estar vinculado a um plano.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O aluno deve estar vinculado a um plano.");
         }
-
         Plano plano = planoRepository.findById(aluno.getPlano().getId())
-                .orElseThrow(() -> new RuntimeException("Plano não encontrado."));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Plano não encontrado."));
         aluno.setPlano(plano);
     }
 
     private void vincularTurmaNaCriacao(Aluno aluno, String perfilUsuario) {
-
-        boolean tentouEscolherTurma = aluno.getTurma() != null && aluno.getTurma().getId() != null;
-
-        // Regra de negócio: se for o próprio aluno se cadastrando, a atribuição a uma turma é bloqueada (só o admin pode atribuir um aluno a uma turma)
         if ("ROLE_ALUNO".equals(perfilUsuario)) {
-            if (tentouEscolherTurma) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "Acesso negado: Alunos não podem escolher a própria turma no cadastro. Apenas o administrador faz essa atribuição.");
-            }
-
-            // Se ele mandou vazio (correto), garante que o banco salve como nulo e encerra
             aluno.setTurma(null);
             return;
         }
 
-        // Cláusula de Guarda do Admin: Se não mandou turma (ou mandou sem ID), zera e sai
-        if (!tentouEscolherTurma) {
-            aluno.setTurma(null);
-            return;
+        if (aluno.getTurma() != null && aluno.getTurma().getId() != null) {
+            Turma turma = turmaRepository.findById(aluno.getTurma().getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não encontrada."));
+            aluno.setTurma(turma);
         }
-
-        Turma turma = turmaRepository.findById(aluno.getTurma().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Turma não encontrada."));
-
-        aluno.setTurma(turma);
     }
 
     private void validarEmailUnico(String email) {
-
-        if (email != null && !email.isBlank() && usuarioRepository.findByEmail(email).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ops! O e-mail " + email + " já está cadastrado no sistema!");
+        if (usuarioRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado.");
         }
     }
 
-    // REGRAS DE INATIVAÇÃO
     private void validarSeAlunoJaEstaDesativado(Aluno aluno) {
-
         if (!aluno.getAtivo()) {
-            throw new RuntimeException("Aluno já está desativado.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aluno já está desativado.");
         }
     }
 
     private void validarPendenciasFinanceirasParaCancelamento(Aluno aluno) {
-
         boolean possuiPendencia = pagamentoRepository.findByAlunoId(aluno.getId())
                 .stream()
-                .anyMatch(pagamento ->
-                        pagamento.getStatus() == StatusPagamento.PENDENTE ||
-                                pagamento.getStatus() == StatusPagamento.ATRASADO
-                );
+                .anyMatch(p -> p.getStatus() == StatusPagamento.PENDENTE || p.getStatus() == StatusPagamento.ATRASADO);
 
         if (possuiPendencia) {
-            throw new RuntimeException("Não é possível cancelar matrícula com pagamentos pendentes ou atrasados.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Não é possível inativar com pagamentos pendentes.");
         }
     }
-
 }

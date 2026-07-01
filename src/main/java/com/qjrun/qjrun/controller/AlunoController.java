@@ -1,5 +1,6 @@
 package com.qjrun.qjrun.controller;
 
+import com.qjrun.qjrun.dto.aluno.AlunoResponseDTO;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.service.AlunoService;
 import com.qjrun.qjrun.util.AuthUtil;
@@ -17,13 +18,6 @@ public class AlunoController {
 
     private final AlunoService alunoService;
 
-    // READ (só o administrador vê a lista de alunos)
-    @GetMapping
-    public ResponseEntity<List<Aluno>> findAll(@RequestHeader(value = "Perfil-Usuario", defaultValue = "ROLE_ALUNO") String perfilHeader) {
-        AuthUtil.exigirAdmin(perfilHeader);
-        List<Aluno> alunos = alunoService.findAll();
-        return ResponseEntity.ok(alunos);
-    }
 
     // READ BY ID (o aluno pode ver o próprio perfil)
     @GetMapping("/{id}")
@@ -63,5 +57,9 @@ public class AlunoController {
         // Executa a atualização aplicando as regras dinâmicas que alteramos no AlunoService
         Aluno alunoAtualizado = alunoService.update(id, aluno, perfilHeader);
         return ResponseEntity.ok(alunoAtualizado);
+    }
+    @GetMapping
+    public List<AlunoResponseDTO> listar() {
+        return alunoService.listarTodosDTO();
     }
 }
