@@ -33,7 +33,7 @@ public class InscricaoService {
     public Inscricao inscrever(Long alunoId, Long eventoId) {
 
         Aluno aluno = alunoService.findById(alunoId);
-        Evento evento = eventoService.findById(eventoId);
+        Evento evento = eventoService.buscarPorId(eventoId);
 
         // Valida se o aluno pode se inscrever
         validarRegrasDeInscricao(aluno, evento);
@@ -52,7 +52,7 @@ public class InscricaoService {
     public void cancelarInscricao(Long alunoId, Long eventoId) {
 
         Aluno aluno = alunoService.findById(alunoId);
-        Evento evento = eventoService.findById(eventoId);
+        Evento evento = eventoService.buscarPorId(eventoId);
 
         // Busca a caixa (Optional) com a inscrição ativa
         Inscricao inscricao = inscricaoRepository.findByAlunoAndEventoAndAtivoTrue(aluno, evento).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Este aluno não possui inscrição ativa neste evento."));
