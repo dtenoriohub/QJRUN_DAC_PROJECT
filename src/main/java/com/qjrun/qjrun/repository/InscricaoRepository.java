@@ -3,6 +3,7 @@ package com.qjrun.qjrun.repository;
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Evento;
 import com.qjrun.qjrun.entity.Inscricao;
+import com.qjrun.qjrun.enums.StatusInscricao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,4 +24,8 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
 
     // histórico de inscrições do aluno
     List<Inscricao> findAllByAlunoAndAtivoTrue(Aluno aluno);
+
+    List<Inscricao> findByStatus(StatusInscricao status);
+
+
 }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -59,4 +60,22 @@ public class InscricaoController {
 
         return ResponseEntity.noContent().build();
     }
+    // NOVO: Aprovação
+    @PatchMapping("/{inscricaoId}/aprovar")
+    public ResponseEntity<Void> aprovar(@PathVariable Long inscricaoId,
+                                        @RequestHeader("Perfil-Usuario") String perfil) {
+        if (!"ROLE_ADMIN".equals(perfil)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        inscricaoService.aprovarInscricao(inscricaoId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // NOVO: Listagem geral (para o Admin)
+    @GetMapping("/pendentes")
+    public ResponseEntity<List<Inscricao>> listarPendentes(@RequestHeader("Perfil-Usuario") String perfil) {
+        if (!"ROLE_ADMIN".equals(perfil)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        // Certifique-se de chamar o Service, que chama o InscricaoRepository
+        return ResponseEntity.ok(inscricaoService.listarPendentes());
+    }
 }
+

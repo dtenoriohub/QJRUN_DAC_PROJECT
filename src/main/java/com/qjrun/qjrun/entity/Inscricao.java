@@ -1,5 +1,6 @@
 package com.qjrun.qjrun.entity;
 
+import com.qjrun.qjrun.enums.StatusInscricao;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,6 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Inscricao {
+
+    @Enumerated(EnumType.STRING)
+    private StatusInscricao status = StatusInscricao.PENDENTE;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

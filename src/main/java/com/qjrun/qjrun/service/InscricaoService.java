@@ -4,6 +4,7 @@ import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Evento;
 import com.qjrun.qjrun.entity.Inscricao;
 import com.qjrun.qjrun.entity.Pagamento;
+import com.qjrun.qjrun.enums.StatusInscricao;
 import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.InscricaoRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InscricaoService {
 
+    private final com.qjrun.qjrun.repository.EventoRepository eventoRepository;
     private final InscricaoRepository inscricaoRepository;
 
     // services para reaproveitar as validações de busca já existentes
@@ -105,12 +107,12 @@ public class InscricaoService {
     }
 
     private Inscricao registrarNovaInscricao(Aluno aluno, Evento evento) {
-
         Inscricao inscricao = Inscricao.builder()
                 .aluno(aluno)
                 .evento(evento)
                 .dataInscricao(LocalDateTime.now())
                 .ativo(true)
+                .status(StatusInscricao.PENDENTE) // A inscrição nasce pendente
                 .build();
 
         return inscricaoRepository.save(inscricao);
@@ -133,6 +135,35 @@ public class InscricaoService {
                 .build();
 
         pagamentoService.create(taxaInscricao);
+    }
+
+    // Método de Aprovação
+    @Transactional
+    public void aprovarInscricao(Long inscricaoId) {
+        Inscricao inscricao = inscricaoRepository.findById(inscricaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inscrição não encontrada"));
+
+        if (inscricao.getStatus() != StatusInscricao.PENDENTE) {
+            throw new RuntimeException("A inscrição já foi processada (Status: " + inscricao.getStatus() + ")");
+        }
+
+        Evento evento = inscricao.getEvento();
+
+        // Valida vagas no momento da aprovação
+        if (evento.getVagas() <= 0) {
+            throw new RuntimeException("Não há vagas disponíveis para este evento.");
+        }
+
+        // 1. Subtrai a vaga
+        evento.setVagas(evento.getVagas() - 1);
+        eventoRepository.save(evento);
+
+        // 2. Altera o status
+        inscricao.setStatus(StatusInscricao.APROVADA);
+        inscricaoRepository.save(inscricao);
+    }
+    public List<Inscricao> listarPendentes() {
+        return inscricaoRepository.findByStatus(StatusInscricao.PENDENTE);
     }
 
 }
