@@ -1,12 +1,12 @@
 package com.qjrun.qjrun.controller;
 
-
-import com.qjrun.qjrun.entity.Turma;
+import com.qjrun.qjrun.dto.aluno.AlunoResponseDTO;
+import com.qjrun.qjrun.dto.turma.TurmaRequestDTO;
+import com.qjrun.qjrun.dto.turma.TurmaResponseDTO;
 import com.qjrun.qjrun.service.TurmaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -17,36 +17,48 @@ public class TurmaController {
 
     private final TurmaService turmaService;
 
+    // CREATE
     @PostMapping
-    public Turma create(@RequestBody Turma turma) {
-        return turmaService.save(turma);
+    @ResponseStatus(HttpStatus.CREATED)
+    public TurmaResponseDTO create(@RequestBody TurmaRequestDTO dto) {
+        return turmaService.save(dto);
     }
 
+    // READ: Buscar alunos da turma
+    @GetMapping("/{id}/alunos")
+    public List<AlunoResponseDTO> listarAlunosDaTurma(@PathVariable Long id) {
+        return turmaService.listarAlunosPorTurma(id);
+    }
+
+    // READ (Listagem)
     @GetMapping
-    public List<Turma> findAll() {
-        return turmaService.findAll();
+    public List<TurmaResponseDTO> findAll() {
+        return turmaService.findAllDTO();
     }
 
-    @GetMapping("/{id}")
-    public Turma findById(@PathVariable Long id) {
-        return turmaService.findById(id);
-    }
-
+    // UPDATE
     @PutMapping("/{id}")
-    public Turma update(@PathVariable Long id, @RequestBody Turma turma) {
-        return turmaService.update(id, turma);
+    public TurmaResponseDTO update(@PathVariable Long id, @RequestBody TurmaRequestDTO dto) {
+        return turmaService.update(id, dto);
     }
 
+    // DELETE (Soft Delete)
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         turmaService.desativar(id);
     }
 
+    // --- NOVO RECURSO: VINCULAR ALUNO À TURMA ---
 
-
-
-
-
-
-
+    @PostMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void vincularAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        turmaService.adicionarAlunoNaTurma(turmaId, alunoId);
+    }
+    @DeleteMapping("/{turmaId}/alunos/{alunoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removerAluno(@PathVariable Long turmaId, @PathVariable Long alunoId) {
+        turmaService.removerAlunoDaTurma(turmaId, alunoId);
+    }
 }

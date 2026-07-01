@@ -43,7 +43,9 @@ public class SecurityConfig {
 
                         // 🔑 Permite que QUALQUER usuário logado com JWT (Aluno ou Admin) consiga listar os planos
                         .requestMatchers(HttpMethod.GET, "/planos", "/planos/**").authenticated()
-
+                        .requestMatchers(HttpMethod.POST, "/turmas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/turmas/*/alunos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/turmas/*/alunos").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

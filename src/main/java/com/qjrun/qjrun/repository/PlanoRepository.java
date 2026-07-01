@@ -12,4 +12,8 @@ public interface PlanoRepository extends JpaRepository<Plano, Long> {
 
     List<Plano> findAllByAtivoTrue();
 
-    Optional<Plano> findByTipo(String tipo);}
+    // Adicione este método para o Dashboard
+    long countByAtivoTrue();
+
+    Optional<Plano> findByTipo(String tipo);
+}
