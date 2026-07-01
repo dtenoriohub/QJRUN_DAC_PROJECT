@@ -1,11 +1,12 @@
 package com.qjrun.qjrun.service;
 
+import com.qjrun.qjrun.dto.EventoDTO;
 import com.qjrun.qjrun.entity.Administrador;
 import com.qjrun.qjrun.entity.Evento;
 import com.qjrun.qjrun.repository.AdministradorRepository;
-import lombok.RequiredArgsConstructor;
 import com.qjrun.qjrun.repository.EventoRepository;
-import org.springframework.beans.BeanUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,57 +16,67 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventoService {
 
-    private final EventoRepository eventoRepository;
+    private final EventoRepository repository;
     private final AdministradorRepository administradorRepository;
 
-    // CREATE
+    public List<Evento> listar() {
+        return repository.findByAtivoTrue();
+    }
+
     @Transactional
-    public Evento save(Evento evento, Long administradorId) {
-        // procura o admin que está fazendo a requisição
-        Administrador administrador = administradorRepository.findById(administradorId).orElseThrow(() -> new RuntimeException("Administrador não encontrado."));
+    public Evento salvar(EventoDTO dto) {
+        // 1. Recupera o email do administrador logado através do token JWT
+        String emailAdmin = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        evento.setId(null); // impede atualização acidental de um evento que já existe
-        evento.setAtivo(true); // garante que novos eventos "nasçam" ativos
+        // 2. Busca o administrador no banco
+        Administrador admin = administradorRepository.findByEmail(emailAdmin)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado para este token."));
 
-        // vincula o administrador ao evento
-        evento.setAdministrador(administrador);
+        // 3. Constrói o evento vinculado ao administrador
+        Evento evento = Evento.builder()
+                .nome(dto.getNome())
+                .descricao(dto.getDescricao())
+                .local(dto.getLocal())
+                .data(dto.getData())
+                .horario(dto.getHorario())
+                .vagas(dto.getVagas())
+                .valor(dto.getValor())
+                .ativo(true)
+                .administrador(admin) // 🔑 Vínculo obrigatório definido na Entidade
+                .build();
 
-        return eventoRepository.save(evento);
+        return repository.save(evento);
     }
 
-    // READ
-    public List<Evento> findAll() {
-        return eventoRepository.findAllByAtivoTrue();
+    @Transactional
+    public Evento atualizar(Long id, EventoDTO dto) {
+        Evento evento = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + id));
+
+        evento.setNome(dto.getNome());
+        evento.setDescricao(dto.getDescricao());
+        evento.setLocal(dto.getLocal());
+        evento.setData(dto.getData());
+        evento.setHorario(dto.getHorario());
+        evento.setVagas(dto.getVagas());
+        evento.setValor(dto.getValor());
+
+        return repository.save(evento);
     }
 
-    // READ
-    public Evento findById(Long id) {
-        return eventoRepository.findById(id)
+    @Transactional
+    public void deletar(Long id) {
+        Evento evento = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado."));
-    }
 
-    // UPDATE
-    @Transactional
-    public Evento update(Long id, Evento eventoAtualizado) {
-        Evento eventoExistente = findById(id);
-
-        atualizarDadosBase(eventoAtualizado, eventoExistente);
-
-        return eventoRepository.save(eventoExistente);
-    }
-
-    // DELETE
-    @Transactional
-    public void desativar(Long id) {
-        Evento evento = findById(id);
+        // 🛡️ Soft Delete: Marca como inativo em vez de deletar
         evento.setAtivo(false);
-        eventoRepository.save(evento);
+        repository.save(evento);
     }
+    // Dentro da classe EventoService.java
 
-    // MÉTODOS AUXILIARES
-    private void atualizarDadosBase(Evento eventoAtualizado, Evento eventoExistente) {
-
-        // Copia tudo do JSON para o banco, menos o ID e o status
-        BeanUtils.copyProperties(eventoAtualizado, eventoExistente, "id", "ativo");
+    public Evento buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + id));
     }
 }

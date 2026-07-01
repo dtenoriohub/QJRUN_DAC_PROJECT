@@ -3,11 +3,14 @@ package com.qjrun.qjrun.repository;
 import com.qjrun.qjrun.entity.Administrador;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import java.util.Optional; // 👈 Não esqueça de importar o Optional
 import java.util.List;
 
 @Repository
-public interface AdministradorRepository extends JpaRepository<Administrador,Long> {
+public interface AdministradorRepository extends JpaRepository<Administrador, Long> {
 
     List<Administrador> findAllByAtivoTrue();
+
+    // 🔑 ADICIONE ESTA LINHA:
+    Optional<Administrador> findByEmail(String email);
 }
