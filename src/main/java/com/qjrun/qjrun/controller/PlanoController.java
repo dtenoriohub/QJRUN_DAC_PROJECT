@@ -1,7 +1,9 @@
 package com.qjrun.qjrun.controller;
 
+import com.qjrun.qjrun.dto.aluno.AlunoResponseDTO;
 import com.qjrun.qjrun.entity.Plano;
 import com.qjrun.qjrun.service.PlanoService;
+import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +53,19 @@ public class PlanoController {
             @RequestHeader(value = "Perfil-Usuario", required = false) String perfilHeader
     ) {
         return planoService.findById(id);
+    }
+
+    // Listar os alunos que estão associados aos planos
+    @GetMapping("/{id}/alunos")
+    public List<AlunoResponseDTO> listarAlunosDoPlano(
+            @PathVariable Long id,
+            @RequestHeader(value = "Perfil-Usuario") String perfilHeader // Removido o required=false para garantir que o header venha
+    ) {
+        // Trava a execução aqui mesmo se não for ADMIN
+        AuthUtil.exigirAdmin(perfilHeader);
+
+        // Se passou da linha de cima, retorna a lista direto!
+        return planoService.listarAlunosPorPlano(id);
     }
 
     @PutMapping("/{id}")
