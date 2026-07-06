@@ -21,4 +21,5 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
     // Dentro de AlunoRepository
     List<Aluno> findTop5ByOrderByNomeAsc(); // Ou por data de cadastro se você tiver esse campo
 
+    List<Aluno> findAllByPlanoId(Long planoId);
 }
