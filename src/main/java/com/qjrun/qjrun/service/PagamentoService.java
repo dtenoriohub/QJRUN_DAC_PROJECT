@@ -1,6 +1,5 @@
 package com.qjrun.qjrun.service;
 
-
 import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.entity.Inscricao;
 import com.qjrun.qjrun.entity.Pagamento;
@@ -8,7 +7,7 @@ import com.qjrun.qjrun.enums.StatusPagamento;
 import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.AlunoRepository;
 import com.qjrun.qjrun.repository.PagamentoRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy; // ⬅️ NOVO IMPORT
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,29 +16,35 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
+// 🧹 Removemos o @RequiredArgsConstructor para podermos usar o @Lazy no construtor
 public class PagamentoService {
 
     private final PagamentoRepository pagamentoRepository;
     private final AlunoRepository alunoRepository;
+    private final InscricaoService inscricaoService; // ⬅️ NOVA DEPENDÊNCIA
+
+    // 🛠️ CONSTRUTOR MANUAL COM @LAZY (Evita o erro de Dependência Circular)
+    public PagamentoService(PagamentoRepository pagamentoRepository,
+                            AlunoRepository alunoRepository,
+                            @Lazy InscricaoService inscricaoService) {
+        this.pagamentoRepository = pagamentoRepository;
+        this.alunoRepository = alunoRepository;
+        this.inscricaoService = inscricaoService;
+    }
 
     // CREATE (gerar nova cobrança/fatura)
     @Transactional
     public Pagamento create(Pagamento pagamento) {
 
-        // Validação comum para qualquer pagamento
         Aluno aluno = validarEBuscarAluno(pagamento.getAluno().getId());
 
         pagamento.setAluno(aluno);
         pagamento.setStatus(StatusPagamento.PENDENTE);
 
-        // Verifica o tipo de cobrança
         if (pagamento.getTipoPagamento() == TipoPagamento.PLANO) {
             configurarPagamentoDePlano(pagamento, aluno);
-
         } else if (pagamento.getTipoPagamento() == TipoPagamento.INSCRICAO) {
             configurarPagamentoDeInscricao(pagamento, aluno);
-
         } else {
             throw new RuntimeException("Tipo de pagamento inválido ou não informado.");
         }
@@ -49,24 +54,21 @@ public class PagamentoService {
 
     // READ
     public List<Pagamento> findAll() {
-
         return pagamentoRepository.findAll();
     }
 
     // READ (buscar as faturas de um aluno específico)
     public List<Pagamento> findByAlunoId(Long alunoId) {
-
         return pagamentoRepository.findByAlunoId(alunoId);
     }
 
     // VERIFICAR SE O ALUNO ESTÁ INADIMPLENTE
     public boolean existePagamentoAtrasado(Aluno aluno) {
-
         return pagamentoRepository.existsByAlunoAndStatus(aluno, StatusPagamento.ATRASADO);
     }
 
     // VERIFICAR PAGAMENTOS EM ATRASO
-    @Scheduled(fixedDelay = 600000) //executa a cada 10 segundos para fins de teste
+    @Scheduled(fixedDelay = 600000)
     @Transactional
     public void atualizarPagamentosAtrasados() {
         List<Pagamento> pendentes = pagamentoRepository.findByStatus(StatusPagamento.PENDENTE);
@@ -77,18 +79,23 @@ public class PagamentoService {
                 pagamentoRepository.save(pagamento);
             }
         }
-
         System.out.println("Verificação de pagamentos em atraso executada!");
     }
 
-    // CONFIRMAR PAGAMENTO
+    // 🎯 CONFIRMAR PAGAMENTO (E APROVAR INSCRIÇÃO)
     @Transactional
     public Pagamento confirmar(Long id) {
 
-        Pagamento pagamento = pagamentoRepository.findById(id).orElseThrow(() -> new RuntimeException("Pagamento não encontrado."));
+        Pagamento pagamento = pagamentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pagamento não encontrado."));
 
         pagamento.setStatus(StatusPagamento.PAGO);
         pagamento.setDataPagamento(LocalDate.now());
+
+        // 🪄 A MÁGICA: Se for o pagamento de um evento, aprova automaticamente!
+        if (pagamento.getTipoPagamento() == TipoPagamento.INSCRICAO && pagamento.getInscricao() != null) {
+            inscricaoService.aprovarInscricao(pagamento.getInscricao().getId());
+        }
 
         return pagamentoRepository.save(pagamento);
     }
@@ -111,10 +118,8 @@ public class PagamentoService {
             throw new RuntimeException("O aluno não possui um plano vinculado para gerar a mensalidade.");
         }
 
-        // Amarra o plano e zera a inscrição para garantir a exclusividade mútua
         pagamento.setPlano(aluno.getPlano());
         pagamento.setInscricao(null);
-
         pagamento.setPixCopiaECola("PIX-QJRUN-PLANO-" + aluno.getId() + "-" + pagamento.getReferencia());
     }
 
@@ -124,7 +129,6 @@ public class PagamentoService {
             throw new RuntimeException("Para gerar a taxa de um evento, a inscrição correspondente precisa ser informada.");
         }
 
-        // Amarra a inscrição e zera o plano para garantir a exclusividade mútua
         pagamento.setPlano(null);
         pagamento.setPixCopiaECola("PIX-QJRUN-INSC-" + aluno.getId() + "-" + pagamento.getInscricao().getId());
     }
@@ -135,8 +139,6 @@ public class PagamentoService {
         List<Pagamento> pagamentosDaInscricao = pagamentoRepository.findByInscricao(inscricao);
 
         for (Pagamento pagamento : pagamentosDaInscricao) {
-
-            // Só cancela se o aluno ainda não tiver pago
             if (pagamento.getStatus() == StatusPagamento.PENDENTE) {
                 pagamento.setStatus(StatusPagamento.CANCELADO);
                 pagamentoRepository.save(pagamento);
