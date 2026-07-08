@@ -163,7 +163,7 @@ public class InscricaoService {
         inscricaoRepository.save(inscricao);
     }
     public List<Inscricao> listarPendentes() {
-        return inscricaoRepository.findByStatus(StatusInscricao.PENDENTE);
+        return inscricaoRepository.findByStatusAndAtivoTrue(StatusInscricao.PENDENTE);
     }
 
 }

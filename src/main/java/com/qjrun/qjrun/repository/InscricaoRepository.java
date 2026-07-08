@@ -25,7 +25,6 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
     // histórico de inscrições do aluno
     List<Inscricao> findAllByAlunoAndAtivoTrue(Aluno aluno);
 
-    List<Inscricao> findByStatus(StatusInscricao status);
-
+    List<Inscricao> findByStatusAndAtivoTrue(StatusInscricao status);
 
 }

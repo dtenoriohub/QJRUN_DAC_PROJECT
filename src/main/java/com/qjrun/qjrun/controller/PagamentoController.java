@@ -41,7 +41,12 @@ public class PagamentoController {
 
     // READ BY ALUNO (o aluno pode ver as próprias faturas)
     @GetMapping("/aluno/{id}")
-    public ResponseEntity<List<Pagamento>> findByAlunoId(@PathVariable Long id) {
+    public ResponseEntity<List<Pagamento>> findByAlunoId(
+            @PathVariable Long id,
+            @RequestHeader(value = "Perfil-Usuario") String perfilHeader,
+            @RequestHeader(value = "Usuario-Id") Long usuarioLogadoId) {
+
+        AuthUtil.exigirAdminOuAluno(perfilHeader, usuarioLogadoId, id);
 
         List<Pagamento> pagamentos = pagamentoService.findByAlunoId(id);
         return ResponseEntity.ok(pagamentos);
