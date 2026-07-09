@@ -64,7 +64,7 @@ public class PlanoController {
         // Trava a execução aqui mesmo se não for ADMIN
         AuthUtil.exigirAdmin(perfilHeader);
 
-        // Se passou da linha de cima, retorna a lista direto!
+        // Se passou da linha de cima, retorna a lista direto
         return planoService.listarAlunosPorPlano(id);
     }
 
