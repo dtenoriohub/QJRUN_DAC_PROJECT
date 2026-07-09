@@ -16,14 +16,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-// 🧹 Removemos o @RequiredArgsConstructor para podermos usar o @Lazy no construtor
+// Remoção do @RequiredArgsConstructor para poder usar o @Lazy no construtor
 public class PagamentoService {
 
     private final PagamentoRepository pagamentoRepository;
     private final AlunoRepository alunoRepository;
-    private final InscricaoService inscricaoService; // ⬅️ NOVA DEPENDÊNCIA
+    private final InscricaoService inscricaoService; // NOVA DEPENDÊNCIA
 
-    // 🛠️ CONSTRUTOR MANUAL COM @LAZY (Evita o erro de Dependência Circular)
+    // CONSTRUTOR MANUAL COM @LAZY (Evita o erro de Dependência Circular)
     public PagamentoService(PagamentoRepository pagamentoRepository,
                             AlunoRepository alunoRepository,
                             @Lazy InscricaoService inscricaoService) {
@@ -82,7 +82,7 @@ public class PagamentoService {
         System.out.println("Verificação de pagamentos em atraso executada!");
     }
 
-    // 🎯 CONFIRMAR PAGAMENTO (E APROVAR INSCRIÇÃO)
+    // CONFIRMAR PAGAMENTO (E APROVAR INSCRIÇÃO)
     @Transactional
     public Pagamento confirmar(Long id) {
 
@@ -92,7 +92,7 @@ public class PagamentoService {
         pagamento.setStatus(StatusPagamento.PAGO);
         pagamento.setDataPagamento(LocalDate.now());
 
-        // 🪄 A MÁGICA: Se for o pagamento de um evento, aprova automaticamente!
+        // Se for o pagamento de um evento, aprova automaticamente!
         if (pagamento.getTipoPagamento() == TipoPagamento.INSCRICAO && pagamento.getInscricao() != null) {
             inscricaoService.aprovarInscricao(pagamento.getInscricao().getId());
         }

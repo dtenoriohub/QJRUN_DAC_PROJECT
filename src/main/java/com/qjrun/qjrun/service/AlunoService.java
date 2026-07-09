@@ -76,7 +76,7 @@ public class AlunoService {
         validarEAtualizarEmail(alunoAtualizado, alunoExistente);
         atualizarDadosBase(alunoAtualizado, alunoExistente);
         atualizarTurma(alunoAtualizado, alunoExistente, perfilUsuario);
-        atualizarPlano(alunoAtualizado, alunoExistente); // Removido o perfil daqui, pois a regra é genérica
+        atualizarPlano(alunoAtualizado, alunoExistente);
 
         return alunoRepository.save(alunoExistente);
     }
@@ -110,7 +110,6 @@ public class AlunoService {
     private void atualizarDadosBase(Aluno alunoAtualizado, Aluno alunoExistente) {
         alunoExistente.setNome(alunoAtualizado.getNome());
         alunoExistente.setTelefone(alunoAtualizado.getTelefone());
-        // Adicione outros campos necessários aqui
     }
 
     private void atualizarTurma(Aluno alunoAtualizado, Aluno alunoExistente, String perfilUsuario) {

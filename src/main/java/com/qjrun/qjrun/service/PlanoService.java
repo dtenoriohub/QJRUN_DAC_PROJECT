@@ -78,7 +78,7 @@ public class PlanoService {
                         .email(aluno.getEmail())
                         .telefone(aluno.getTelefone())
                         .dataNascimento(aluno.getDataNascimento())
-                        .ativo(aluno.getAtivo()) // Pode ser isAtivo() dependendo de como o Lombok gerou na classe Usuario
+                        .ativo(aluno.getAtivo())
                         .plano(planoSelecionado.getTipo()) // Garantido de existir
                         .turma(aluno.getTurma() != null ? aluno.getTurma().getNome() : "Sem Turma") // Protegido contra NullPointer
                         .build())
