@@ -9,6 +9,8 @@ import com.qjrun.qjrun.enums.StatusPagamento;
 import com.qjrun.qjrun.repository.*;
 import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,8 +43,10 @@ public class AlunoService {
 
         return alunoRepository.save(aluno);
     }
-    public List<AlunoResponseDTO> listarTodosDTO() {
-        return alunoRepository.findAllByAtivoTrue().stream()
+    public Page<AlunoResponseDTO> listarTodosDTO(Pageable pageable) {
+        // Agora chama o repository passando o pageable
+        // O próprio Page<> já possui um método .map(), dispensando o .stream() e o .collect()
+        return alunoRepository.findAllByAtivoTrue(pageable)
                 .map(a -> AlunoResponseDTO.builder()
                         .id(a.getId())
                         .nome(a.getNome())
@@ -54,13 +58,13 @@ public class AlunoService {
                         .ativo(a.getAtivo())
                         .plano(a.getPlano() != null ? a.getPlano().getTipo() : "Sem Plano")
                         .turma(a.getTurma() != null ? a.getTurma().getNome() : "Sem Turma")
-                        .build())
-                .collect(Collectors.toList());
+                        .build());
     }
 
     // READ
-    public List<Aluno> findAll() {
-        return alunoRepository.findAllByAtivoTrue();
+    public Page<Aluno> findAll(Pageable pageable) {
+
+        return alunoRepository.findAllByAtivoTrue(pageable);
     }
 
     public Aluno findById(Long id) {
