@@ -1,6 +1,8 @@
 package com.qjrun.qjrun.repository;
 
 import com.qjrun.qjrun.entity.Aluno;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +14,7 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
 
     int countByTurmaIdAndAtivoTrue(Long turmaId);
 
-    List<Aluno> findAllByAtivoTrue();
+    Page<Aluno> findAllByAtivoTrue(Pageable pageable);
 
     Optional<Aluno> findByEmail(String email);
 
