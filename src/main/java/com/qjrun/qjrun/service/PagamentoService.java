@@ -7,6 +7,8 @@ import com.qjrun.qjrun.enums.StatusPagamento;
 import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.AlunoRepository;
 import com.qjrun.qjrun.repository.PagamentoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.context.annotation.Lazy; // ⬅️ NOVO IMPORT
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -52,9 +54,10 @@ public class PagamentoService {
         return pagamentoRepository.save(pagamento);
     }
 
-    // READ
-    public List<Pagamento> findAll() {
-        return pagamentoRepository.findAll();
+    // READ (Paginado para o Administrador)
+    public Page<Pagamento> findAll(Pageable pageable) {
+
+        return pagamentoRepository.findAll(pageable);
     }
 
     // READ (buscar as faturas de um aluno específico)
