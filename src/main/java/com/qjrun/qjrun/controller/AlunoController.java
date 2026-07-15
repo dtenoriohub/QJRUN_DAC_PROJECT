@@ -5,11 +5,12 @@ import com.qjrun.qjrun.entity.Aluno;
 import com.qjrun.qjrun.service.AlunoService;
 import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,7 +18,6 @@ import java.util.List;
 public class AlunoController {
 
     private final AlunoService alunoService;
-
 
     // READ BY ID (o aluno pode ver o próprio perfil)
     @GetMapping("/{id}")
@@ -58,8 +58,15 @@ public class AlunoController {
         Aluno alunoAtualizado = alunoService.update(id, aluno, perfilHeader);
         return ResponseEntity.ok(alunoAtualizado);
     }
+
+    // Listagem Paginada
     @GetMapping
-    public List<AlunoResponseDTO> listar() {
-        return alunoService.listarTodosDTO();
+    public ResponseEntity<Page<AlunoResponseDTO>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AlunoResponseDTO> alunosPaginados = alunoService.listarTodosDTO(pageable);
+        return ResponseEntity.ok(alunosPaginados);
     }
 }
