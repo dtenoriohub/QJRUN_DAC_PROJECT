@@ -4,10 +4,12 @@ import com.qjrun.qjrun.entity.Inscricao;
 import com.qjrun.qjrun.service.InscricaoService;
 import com.qjrun.qjrun.util.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -60,22 +62,29 @@ public class InscricaoController {
 
         return ResponseEntity.noContent().build();
     }
-    // NOVO: Aprovação
+
+    // Aprovação
     @PatchMapping("/{inscricaoId}/aprovar")
     public ResponseEntity<Void> aprovar(@PathVariable Long inscricaoId,
-                                        @RequestHeader("Perfil-Usuario") String perfil) {
-        if (!"ROLE_ADMIN".equals(perfil)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+                                        @RequestHeader("Perfil-Usuario") String perfilHeader) {
+
+        AuthUtil.exigirAdmin(perfilHeader);
+
         inscricaoService.aprovarInscricao(inscricaoId);
         return ResponseEntity.noContent().build();
     }
 
-    // NOVO: Listagem geral (para o Admin)
-    @GetMapping("/pendentes")
-    public ResponseEntity<List<Inscricao>> listarPendentes(@RequestHeader("Perfil-Usuario") String perfil) {
-        if (!"ROLE_ADMIN".equals(perfil)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    // Listar todas as inscrições pro admin (pendentes no topo) com paginação
+    @GetMapping
+    public ResponseEntity<Page<Inscricao>> listarPendentes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Perfil-Usuario") String perfilHeader) {
 
-        // Certifique-se de chamar o Service, que chama o InscricaoRepository
-        return ResponseEntity.ok(inscricaoService.listarPendentes());
+        // ✨ Usando o seu AuthUtil
+        AuthUtil.exigirAdmin(perfilHeader);
+
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(inscricaoService.listarPendentesParaAdmin(pageable));
     }
 }
-
