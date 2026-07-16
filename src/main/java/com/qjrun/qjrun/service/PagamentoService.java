@@ -54,10 +54,10 @@ public class PagamentoService {
         return pagamentoRepository.save(pagamento);
     }
 
-    // READ (Paginado para o Administrador)
+    // READ (Paginado para o Administrador - Priorizando Atrasados e Pendentes)
     public Page<Pagamento> findAll(Pageable pageable) {
-
-        return pagamentoRepository.findAll(pageable);
+        
+        return pagamentoRepository.findAllPriorizandoAtrasadosEPendentes(pageable);
     }
 
     // READ (buscar as faturas de um aluno específico)
