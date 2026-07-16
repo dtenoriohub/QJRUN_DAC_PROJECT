@@ -8,6 +8,8 @@ import com.qjrun.qjrun.enums.StatusInscricao;
 import com.qjrun.qjrun.enums.TipoPagamento;
 import com.qjrun.qjrun.repository.InscricaoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,8 +164,11 @@ public class InscricaoService {
         inscricao.setStatus(StatusInscricao.APROVADA);
         inscricaoRepository.save(inscricao);
     }
-    public List<Inscricao> listarPendentes() {
-        return inscricaoRepository.findByStatusAndAtivoTrue(StatusInscricao.PENDENTE);
+
+    // Alterado para usar a busca que prioriza os Pendentes no topo
+    public Page<Inscricao> listarPendentesParaAdmin(Pageable pageable) {
+
+        return inscricaoRepository.findAllAtivoTruePriorizandoPendentes(pageable);
     }
 
 }
